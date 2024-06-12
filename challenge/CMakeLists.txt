@@ -83,13 +83,19 @@ set(SIMULATOR_LINK_FLAGS -Xssimulation -Xsghdl -Xstarget=${FPGA_DEVICE} ${USER_F
 set(FPGA_COMPILE_FLAGS -DFPGA_HARDWARE)
 set(FPGA_LINK_FLAGS -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_FPGA_FLAGS} -reuse-exe=${CMAKE_BINARY_DIR}/${FPGA_OUTPUT_NAME})
 
+#find_package(MKL CONFIG REQUIRED)
+#message(STATUS "${MKL_IMPORTED_TARGETS}") #Provides available list
+#set(MKL_COMPILE_FLAGS $<TARGET_PROPERTY:MKL::MKL,INTERFACE_COMPILE_OPTIONS>)
+#set(MKL_INCLUDE_FLAGS $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
+#set(MKL_LINK_FLAGS $<LINK_ONLY:MKL::MKL>)
 ###############################################################################
 ### FPGA Emulator
 ###############################################################################
 add_library(${EMULATOR_TARGET} SHARED ${SOURCE_FILES})
-target_compile_options(${EMULATOR_TARGET} PRIVATE ${COMMON_COMPILE_FLAGS})
+target_compile_options(${EMULATOR_TARGET} PUBLIC ${COMMON_COMPILE_FLAGS} ${MKL_COMPILE_FLAGS})
 target_compile_options(${EMULATOR_TARGET} PRIVATE ${EMULATOR_COMPILE_FLAGS})
-target_link_libraries(${EMULATOR_TARGET} ${COMMON_LINK_FLAGS})
+target_include_directories(${EMULATOR_TARGET} PUBLIC ${MKL_INCLUDE_FLAGS})
+target_link_libraries(${EMULATOR_TARGET} ${COMMON_LINK_FLAGS} ${MKL_LINK_FLAGS})
 target_link_libraries(${EMULATOR_TARGET} ${EMULATOR_LINK_FLAGS})
 target_link_libraries(${EMULATOR_TARGET} MPI::MPI_CXX)
 set_target_properties(${EMULATOR_TARGET} PROPERTIES OUTPUT_NAME ${EMULATOR_OUTPUT_NAME})

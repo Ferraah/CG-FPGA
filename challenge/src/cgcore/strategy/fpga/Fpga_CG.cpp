@@ -6,10 +6,12 @@ class DotProduct;
 class GEMV;
 class VecSum;
 
+
+constexpr uint II_CYCLES = 256; 
+
 namespace cgcore{
     
     /**
-     * @param kernel The kernel associated to the method
      * @param dA The reference to the first vector in device memory 
      * @param dB The reference to the first vector in device memory 
      * @param dC The reference to the result in device memory
@@ -17,18 +19,35 @@ namespace cgcore{
     */
     void FPGA_CG::dot(sycl::queue &q, const double *dA, const double *dB, double *dC,  size_t size) const 
     {
-
         q.submit([&](sycl::handler &h){
             h.single_task<DotProduct>([=](){
-                double sum = 0;
 
-                for (size_t idx = 0; idx < size; idx++) {
-                    double a_val = dA[idx];
-                    double b_val = dB[idx];
-                    sum += a_val * b_val;
+                //Create shift register with II_CYCLE+1 elements
+                double shift_reg[II_CYCLES+1];
+
+                //Initialize all elements of the register to 0
+                //You must initialize the shift register 
+                for (int i = 0; i < II_CYCLES + 1; i++) {
+                    shift_reg[i] = 0;
                 }
 
-                dC[0] = sum;
+                for(int i=0; i< size; i++){
+                    shift_reg[II_CYCLES] = shift_reg[0] + dA[i]*dB[i];
+
+                    #pragma unroll
+                    for(int j=0;j<II_CYCLES;j++){
+                        shift_reg[j]=shift_reg[j+1];
+                    }
+
+                }
+
+                double temp_sum = 0; 
+                #pragma unroll
+                for (int i = 0; i < II_CYCLES; i++) {
+                    temp_sum += shift_reg[i];
+                }
+
+                dC[0] = temp_sum;
 
             });
         });
@@ -36,7 +55,6 @@ namespace cgcore{
 
     /**
      * Sum two vector and replace the result as the first addend.
-     * @param kernel FPGA kernel method 
      * @param alpha
      * @param dX Reference to first vector in device memory
      * @param beta 
@@ -47,9 +65,14 @@ namespace cgcore{
     {
         q.submit([&](sycl::handler &h){
             h.single_task<VecSum>([=](){
+
+
+                double res_idx;
                 for (size_t idx = 0; idx < size; idx++) {
-                    dY[idx] = alpha * dX[idx] + beta * dY[idx];
+                    res_idx = alpha * dX[idx] + beta * dY[idx];
+                    dY[idx] = res_idx;
                 }
+
             });
         });
 
@@ -68,12 +91,47 @@ namespace cgcore{
     {
         q.submit([&](sycl::handler &h){
             h.single_task<GEMV>([=](){
+                
+                //Create shift register with II_CYCLE+1 elements
+                double shift_reg[II_CYCLES+1];
+
+                // For every row
                 for(size_t i = 0; i < size; i++){
-                    double sum = 0.0;
+
+                    /*
+                    #pragma unroll
                     for(size_t j = 0; j < size; j++){
                         sum += dA[i * size + j] * dB[j];
                     }
-                    dC[i] = sum; 
+                    */
+
+                    // DOT PRODUCT
+                    {
+                        // Initialize all elements of the register to 0
+                        for (int k = 0; k < II_CYCLES + 1; k++) {
+                            shift_reg[k] = 0;
+                        }
+
+                        for(int j=0; j < size; j++){
+
+                            shift_reg[II_CYCLES] = shift_reg[0] + dA[i*size + j]*dB[j];
+
+                            #pragma unroll
+                            for(int k=0;k<II_CYCLES;k++){
+                                shift_reg[k]=shift_reg[k+1];
+                            }
+
+                        }
+
+                        double temp_sum = 0; 
+                        #pragma unroll
+                        for (int k = 0; k < II_CYCLES; k++) {
+                            temp_sum += shift_reg[k];
+                        }
+
+                        dC[i] = temp_sum; 
+                        //
+                    }
                 }
             });
         });
