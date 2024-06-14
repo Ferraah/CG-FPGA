@@ -11,7 +11,9 @@ module load env/staging/2023.1
 module load intel
 module load 520nmx/20.4
 module load intel-fpga
+module load OpenMPI
 
 echo $PATH
-cd /home/users/u101373/dot_product/build
-time make fpga 
+cd /home/users/u101373/CG-FPGA/build
+time make fpga -j 
+time make 

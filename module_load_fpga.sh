@@ -5,4 +5,5 @@ function module_load_fpga(){
 	module load CMake 
 	module load intel-fpga
 	module load 520nmx/20.4
+	module load OpenMPI
 }

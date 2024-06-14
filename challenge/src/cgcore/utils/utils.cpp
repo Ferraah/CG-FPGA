@@ -14,7 +14,9 @@ bool utils::read_matrix_from_file(const char * filename, double * &matrix_out, s
     }
     fread(&num_rows, sizeof(size_t), 1, file);
     fread(&num_cols, sizeof(size_t), 1, file);
-    matrix = new double[num_rows * num_cols];
+
+    matrix = new (std::align_val_t{ 64 }) double[num_rows * num_cols];
+
     fread(matrix, sizeof(double), num_rows * num_cols, file);
 
     matrix_out = matrix;
@@ -37,7 +39,8 @@ bool utils::read_vector_from_file(const char * filename, double * &vector_out, s
     }
 
     fread(&length, sizeof(size_t), 1, file);
-    vector_out = new double[length];
+    vector_out = new (std::align_val_t{ 64 })  double[length];
+
     fread(vector_out, sizeof(double), length, file);
 
     fclose(file);
@@ -48,7 +51,7 @@ bool utils::read_vector_from_file(const char * filename, double * &vector_out, s
 void utils::create_vector(double * &vector_out, size_t length, double scalar)
 {
 
-    vector_out = new double[length];
+    vector_out = new (std::align_val_t{ 64 }) double[length];
 
     for(size_t i = 0; i< length; i++)
         vector_out[i] = scalar;
@@ -57,7 +60,7 @@ void utils::create_vector(double * &vector_out, size_t length, double scalar)
 void utils::create_matrix(double * &matrix_out, size_t n, size_t m, double scalar)
 {
 
-    matrix_out = new double[n*m];
+    matrix_out = new (std::align_val_t{ 64 }) double[n*m];
 
     for(size_t r = 0; r<n; r++)
         for(size_t c = 0; c<m; c++)
@@ -79,7 +82,7 @@ bool utils::read_matrix_rows(const char * filename, double * &matrix_out, size_t
     
     assert(starting_row_num + num_rows_to_read <= num_rows);
 
-    matrix_out = new double[num_rows_to_read * num_cols];
+    matrix_out = new (std::align_val_t{ 64 }) double[num_rows_to_read * num_cols];
 
     
     size_t offset = starting_row_num * num_cols + 2; 

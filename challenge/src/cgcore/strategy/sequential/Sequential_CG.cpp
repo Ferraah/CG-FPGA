@@ -74,7 +74,7 @@ namespace cgcore{
             axpby(alpha, p, 1.0, x, size);
             axpby(-alpha, Ap, 1.0, r, size);
             rr_new = dot(r, r, size);
-            //std::cout << r[0] << std::endl;
+            //std::clog << r[0] << std::endl;
             beta = rr_new / rr;
             rr = rr_new;
 
@@ -88,11 +88,11 @@ namespace cgcore{
 
         if(num_iters <= max_iters)
         {
-            printf("Converged in %d iterations, relative error is %e\n", num_iters, std::sqrt(rr / bb));
+            std::clog << "Converged in" << num_iters << ", relative error is: " <<  std::sqrt(rr / bb) << std::endl;
         }
         else
         {
-            printf("Did not converge in %d iterations, relative error is %e\n", max_iters, std::sqrt(rr / bb));
+            std::clog << "Did not converge in" << num_iters << ", relative error is: " <<  std::sqrt(rr / bb) << std::endl;
         }
         
     }

@@ -1,0 +1,79 @@
+/apps/USE/easybuild/staging/2023.1/software/OpenMPI/5.0.0-GCC-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/intel-compilers/2023.1.0/compiler/2023.1.0/linux/lib/oclfpga/bin:/apps/USE/easybuild/staging/2023.1/software/impi/2021.9.0-intel-compilers-2023.1.0/mpi/2021.9.0/libfabric/bin:/apps/USE/easybuild/staging/2023.1/software/impi/2021.9.0-intel-compilers-2023.1.0/mpi/2021.9.0/bin:/apps/USE/easybuild/staging/2023.1/software/UCC/1.2.0-GCCcore-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/PMIx/4.2.6-GCCcore-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/libfabric/1.18.0-GCCcore-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/UCX/1.14.1-GCCcore-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/libevent/2.1.12-GCCcore-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/hwloc/2.9.1-GCCcore-12.3.0/sbin:/apps/USE/easybuild/staging/2023.1/software/hwloc/2.9.1-GCCcore-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/libxml2/2.11.4-GCCcore-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/numactl/2.0.16-GCCcore-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/intel-compilers/2023.1.0/compiler/2023.1.0/linux/bin/intel64:/apps/USE/easybuild/staging/2023.1/software/intel-compilers/2023.1.0/compiler/2023.1.0/linux/bin:/apps/USE/easybuild/staging/2023.1/software/binutils/2.40-GCCcore-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/ifpgasdk/20.4:/apps/USE/easybuild/staging/2023.1/software/ifpgasdk/20.4/qsys/bin:/apps/USE/easybuild/staging/2023.1/software/ifpgasdk/20.4/nios2eds/bin/gnu/H-x86_64-pc-linux-gnu/bin:/apps/USE/easybuild/staging/2023.1/software/ifpgasdk/20.4/nios2eds/bin:/apps/USE/easybuild/staging/2023.1/software/ifpgasdk/20.4/quartus/sopc_builder/bin:/apps/USE/easybuild/staging/2023.1/software/ifpgasdk/20.4/quartus/bin:/apps/USE/easybuild/staging/2023.1/software/ncurses/5.9/bin:/apps/USE/easybuild/staging/2023.1/software/CMake/3.26.3-GCCcore-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/libarchive/3.6.2-GCCcore-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/XZ/5.4.2-GCCcore-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/cURL/8.0.1-GCCcore-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/OpenSSL/1.1/bin:/apps/USE/easybuild/staging/2023.1/software/bzip2/1.0.8-GCCcore-12.3.0/bin:/apps/USE/easybuild/staging/2023.1/software/GCCcore/12.3.0/bin:/opt/software/xxl/run:/specific/bin:/apps/installs/software/myquota/0.3.2/bin:/mnt/tier2/users/u101373/.vscode-server/cli/servers/Stable-e170252f762678dec6ca2cc69aba1570769a5d39/server/bin/remote-cli:/home/users/u101373/.local/bin:/home/users/u101373/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/software/xxl/system:/opt/software/xxl/fs
+[ 16%] To compile manually:
+icpx -fsycl -fintelfpga -Wall -qactypes -DFPGA_HARDWARE -c ../../challenge/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/fpga/Fpga_CG.cpp -o CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/fpga/Fpga_CG.cpp.o
+icpx -fsycl -fintelfpga -Wall -qactypes -DFPGA_HARDWARE -c ../../challenge/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/sequential/Sequential_CG.cpp -o CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/sequential/Sequential_CG.cpp.o
+icpx -fsycl -fintelfpga -Wall -qactypes -DFPGA_HARDWARE -c ../../challenge/home/users/u101373/CG-FPGA/challenge/src/cgcore/timer/Timer.cpp -o CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/timer/Timer.cpp.o
+icpx -fsycl -fintelfpga -Wall -qactypes -DFPGA_HARDWARE -c ../../challenge/home/users/u101373/CG-FPGA/challenge/src/cgcore/utils/utils.cpp -o CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/utils/utils.cpp.o
+
+To link manually:
+icpx -fsycl -fintelfpga -qactypes -Xshardware -Xstarget=p520_hpc_m210h_g3x16 -reuse-exe=/home/users/u101373/CG-FPGA/build/CG_CORE.fpga -o CG_CORE.fpga CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/fpga/Fpga_CG.cpp.o CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/sequential/Sequential_CG.cpp.o CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/timer/Timer.cpp.o CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/utils/utils.cpp.o
+[ 16%] Built target displayFPGACompileCommands
+[100%] Built target fpga
+
+real	0m0.897s
+user	0m0.052s
+sys	0m0.478s
+[  9%] Built target gtest
+[ 13%] Building CXX object googletest/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o
+[ 18%] Linking CXX static library ../../lib/libgmock.a
+[ 18%] Built target gmock
+[ 22%] Building CXX object googletest/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o
+[ 27%] Linking CXX static library ../../lib/libgmock_main.a
+[ 27%] Built target gmock_main
+[ 31%] Building CXX object googletest/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o
+[ 36%] Linking CXX static library ../../lib/libgtest_main.a
+[ 36%] Built target gtest_main
+[ 40%] To compile manually:
+icpx -fsycl -fintelfpga -Wall -qactypes -DFPGA_EMULATOR -c ../../challenge/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/fpga/Fpga_CG.cpp -o CMakeFiles/fpga_emu.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/fpga/Fpga_CG.cpp.o
+icpx -fsycl -fintelfpga -Wall -qactypes -DFPGA_EMULATOR -c ../../challenge/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/sequential/Sequential_CG.cpp -o CMakeFiles/fpga_emu.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/sequential/Sequential_CG.cpp.o
+icpx -fsycl -fintelfpga -Wall -qactypes -DFPGA_EMULATOR -c ../../challenge/home/users/u101373/CG-FPGA/challenge/src/cgcore/timer/Timer.cpp -o CMakeFiles/fpga_emu.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/timer/Timer.cpp.o
+icpx -fsycl -fintelfpga -Wall -qactypes -DFPGA_EMULATOR -c ../../challenge/home/users/u101373/CG-FPGA/challenge/src/cgcore/utils/utils.cpp -o CMakeFiles/fpga_emu.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/utils/utils.cpp.o
+
+To link manually:
+icpx -fsycl -fintelfpga -qactypes -o CG_CORE.fpga_emu CMakeFiles/fpga_emu.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/fpga/Fpga_CG.cpp.o CMakeFiles/fpga_emu.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/sequential/Sequential_CG.cpp.o CMakeFiles/fpga_emu.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/timer/Timer.cpp.o CMakeFiles/fpga_emu.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/utils/utils.cpp.o
+[ 40%] Built target displayEmulationCompileCommands
+[ 45%] Building CXX object challenge/CMakeFiles/fpga_emu.dir/src/cgcore/strategy/fpga/Fpga_CG.cpp.o
+[ 50%] Building CXX object challenge/CMakeFiles/fpga_emu.dir/src/cgcore/strategy/sequential/Sequential_CG.cpp.o
+[ 54%] Building CXX object challenge/CMakeFiles/fpga_emu.dir/src/cgcore/timer/Timer.cpp.o
+[ 59%] Building CXX object challenge/CMakeFiles/fpga_emu.dir/src/cgcore/utils/utils.cpp.o
+[ 63%] Linking CXX shared library ../libCG_CORE.fpga_emu.so
+[ 63%] Built target fpga_emu
+[ 68%] To compile manually:
+icpx -fsycl -fintelfpga -Wall -qactypes -DFPGA_HARDWARE -c ../../challenge/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/fpga/Fpga_CG.cpp -o CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/fpga/Fpga_CG.cpp.o
+icpx -fsycl -fintelfpga -Wall -qactypes -DFPGA_HARDWARE -c ../../challenge/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/sequential/Sequential_CG.cpp -o CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/sequential/Sequential_CG.cpp.o
+icpx -fsycl -fintelfpga -Wall -qactypes -DFPGA_HARDWARE -c ../../challenge/home/users/u101373/CG-FPGA/challenge/src/cgcore/timer/Timer.cpp -o CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/timer/Timer.cpp.o
+icpx -fsycl -fintelfpga -Wall -qactypes -DFPGA_HARDWARE -c ../../challenge/home/users/u101373/CG-FPGA/challenge/src/cgcore/utils/utils.cpp -o CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/utils/utils.cpp.o
+
+To link manually:
+icpx -fsycl -fintelfpga -qactypes -Xshardware -Xstarget=p520_hpc_m210h_g3x16 -reuse-exe=/home/users/u101373/CG-FPGA/build/CG_CORE.fpga -o CG_CORE.fpga CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/fpga/Fpga_CG.cpp.o CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/strategy/sequential/Sequential_CG.cpp.o CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/timer/Timer.cpp.o CMakeFiles/fpga.dir/home/users/u101373/CG-FPGA/challenge/src/cgcore/utils/utils.cpp.o
+[ 68%] Built target displayFPGACompileCommands
+[ 90%] Built target fpga
+[ 95%] Building CXX object test/CMakeFiles/cg_test.dir/cg_test.cpp.o
+[100%] Linking CXX executable cg_test
+warning: -reuse-exe file '/home/users/u101373/CG-FPGA/build/CG_CORE.fpga' not found; ignored
+Fpga_CG.cpp:171: Compiler Warning: Memory instruction with unresolved pointer may lead to bad QoR.
+Fpga_CG.cpp:35: Compiler Warning: Memory instruction with unresolved pointer may lead to bad QoR.
+Fpga_CG.cpp:91: Compiler Warning: Memory instruction with unresolved pointer may lead to bad QoR.
+aoc: Compiling for FPGA. This process may take several hours to complete.  Prior to performing this compile, be sure to check the reports to ensure the design will meet your performance targets.  If the reports indicate performance targets are not being met, code edits may be required.  Please refer to the oneAPI FPGA Optimization Guide for information on performance tuning applications for FPGAs.
+Error (170012): Fitter requires 71066 LABs to implement the design, but the device contains only 60527 LABs
+Error (170025): Fitter requires that more entities of type LAB be placed in a region than are available in the region File: /opt/intelFPGA_pro/20.4/quartus/libraries/megafunctions/altsource_probe_body.vhd Line: 709
+Error: An error occurred during placement
+Error: Quartus Prime Fitter was unsuccessful. 6 errors, 92 warnings
+Error: Can't run the Timing Analyzer (quartus_sta) -- Fitter (quartus_fit) failed or was not run. Run the Fitter (quartus_fit) successfully before running the Timing Analyzer (create_timing_netlist).
+Error: Quartus Prime Timing Analyzer was unsuccessful. 1 error, 0 warnings
+Error: Quartus Fitter has failed! Breaking execution...
+Error (23035): Tcl error: 
+Error (23031): Evaluation of Tcl script compile_script.tcl unsuccessful
+Error: Quartus Prime Compiler Database Interface was unsuccessful. 3 errors, 0 warnings
+For more details, full Quartus compile output can be found in files quartuserr.tmp and quartus_sh_compile.log.
+Error: Compiler Error, not able to generate hardware
+
+llvm-foreach: 
+icpx: error: fpga compiler command failed with exit code 1 (use -v to see invocation)
+make[2]: *** [test/CMakeFiles/cg_test.dir/build.make:102: test/cg_test] Error 1
+make[1]: *** [CMakeFiles/Makefile2:492: test/CMakeFiles/cg_test.dir/all] Error 2
+make: *** [Makefile:136: all] Error 2
+
+real	394m2.182s
+user	1773m27.231s
+sys	143m18.038s

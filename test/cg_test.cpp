@@ -2,6 +2,10 @@
 #include <vector>
 #include <gtest/gtest.h>
 
+
+#include <sycl/ext/intel/fpga_extensions.hpp>
+#include <sycl/sycl.hpp>
+
 //#include "test_template.hpp"
 #include "cgcore.hpp"
 
@@ -18,7 +22,75 @@ bool AreArraysEqual(double* arr1, double* arr2, size_t size, double tol) {
     return true;
 }
 
-TEST(GEMV, gemv_1){
+sycl::queue create_queue(){
+    #if FPGA_SIMULATOR
+    auto selector = sycl::ext::intel::fpga_simulator_selector_v;
+    std::cout << "Using sim settings";
+    #elif FPGA_HARDWARE
+    auto selector = sycl::ext::intel::fpga_selector_v;
+    std::cout << "Using HW settings";
+    #else  // #if FPGA_EMULATOR
+    auto selector = sycl::ext::intel::fpga_emulator_selector_v;
+    std::cout << "Using emu settings";
+    #endif
+
+    // create the device queue
+    sycl::queue q(selector, sycl::property::queue::in_order{} );
+    // make sure the device supports USM host allocations
+    auto device = q.get_device();
+
+    std::clog << "Running on device: "
+                << device.get_info<sycl::info::device::name>().c_str()
+                << std::endl;
+    return q;
+ 
+
+}
+
+TEST(CG_TEST, vec_sum){
+    sycl::queue q = create_queue(); 
+    constexpr int n = 1024;
+
+    auto d_vec = sycl::malloc_shared<double>(n*sizeof(double), q); 
+    double *expected;
+
+    for(int i=0; i<n; i++) 
+        d_vec[i] = 1.0; 
+    
+    utils::create_vector(expected, n, 2.0);
+
+    FPGA_CG strategy;
+    strategy.vec_sum(q, 1.0, d_vec, 1.0, d_vec, n);
+    q.wait();
+
+    ASSERT_TRUE(AreArraysEqual(d_vec, expected, n, 0));
+
+    sycl::free(d_vec, q);
+    delete [] expected;
+
+}
+
+TEST(CG_TEST, dot){
+    sycl::queue q = create_queue(); 
+    constexpr int n = 1024;
+
+    auto d_vec = sycl::malloc_shared<double>(n*sizeof(double), q); 
+    auto d_res = sycl::malloc_shared<double>(1*sizeof(double), q); 
+    
+    for(int i=0; i<n; i++) 
+        d_vec[i] = 1;
+    
+    FPGA_CG strategy;
+    strategy.dot(q, d_vec, d_vec, d_res, n);
+    q.wait();
+
+    ASSERT_EQ(d_res[0], (double)n);
+    sycl::free(d_vec, q);
+    sycl::free(d_res, q);
+
+}
+
+TEST(CG_TESTS, full){
     const char *m_path =  "/project/home/p200301/tests/matrix100.bin";
     const char *rhs_path =  "/project/home/p200301/tests/rhs100.bin";
 

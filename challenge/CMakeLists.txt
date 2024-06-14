@@ -81,7 +81,7 @@ set(REPORT_LINK_FLAGS -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_FPGA_FLAGS} -f
 set(SIMULATOR_COMPILE_FLAGS -Xssimulation -DFPGA_SIMULATOR)
 set(SIMULATOR_LINK_FLAGS -Xssimulation -Xsghdl -Xstarget=${FPGA_DEVICE} ${USER_FPGA_FLAGS} -reuse-exe=${CMAKE_BINARY_DIR}/${SIMULATOR_OUTPUT_NAME})
 set(FPGA_COMPILE_FLAGS -DFPGA_HARDWARE)
-set(FPGA_LINK_FLAGS -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_FPGA_FLAGS} -reuse-exe=${CMAKE_BINARY_DIR}/${FPGA_OUTPUT_NAME})
+set(FPGA_LINK_FLAGS -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_FPGA_FLAGS} -reuse-exe=${CMAKE_BINARY_DIR}/test/cg_test)
 
 #find_package(MKL CONFIG REQUIRED)
 #message(STATUS "${MKL_IMPORTED_TARGETS}") #Provides available list
@@ -136,6 +136,7 @@ target_compile_options(${FPGA_TARGET} PRIVATE ${COMMON_COMPILE_FLAGS})
 target_compile_options(${FPGA_TARGET} PRIVATE ${FPGA_COMPILE_FLAGS})
 target_link_libraries(${FPGA_TARGET} ${COMMON_LINK_FLAGS})
 target_link_libraries(${FPGA_TARGET} ${FPGA_LINK_FLAGS})
+target_link_libraries(${FPGA_TARGET} MPI::MPI_CXX) 
 set_target_properties(${FPGA_TARGET} PROPERTIES OUTPUT_NAME ${FPGA_OUTPUT_NAME})
 
 
