@@ -55,6 +55,7 @@ namespace cgcore{
 
     /**
      * Sum two vector and replace the result as the first addend.
+     * @param q Reference to queue
      * @param alpha
      * @param dX Reference to first vector in device memory
      * @param beta 
@@ -102,16 +103,6 @@ namespace cgcore{
 
                 }
                 
-
-                /*
-                for (size_t idx = 0; idx < size; idx++) {
-
-                    res_idx = alpha * dX[idx] + beta * dY[idx];
-                    dY[idx] = res_idx;
-                }
-                */
-                
-
             });
         });
 
@@ -119,12 +110,11 @@ namespace cgcore{
 
     /**
      * Run the matrix vector multiplication on the selected device. 
-     * @param kernel the kernel associated to the method
+     * @param q Reference to queue
      * @param dA the device pointer to the matrix A, already loaded in device memory. 
      * @param dB the device pointer to the vector b, already loaded in device memory.
      * @param dC the device pointer to the result c, in device memory.
-     * 
-     * @TODO: Remove A parameter
+     * @param size size of the vector
     */
     void FPGA_CG::matrix_vector_mul(sycl::queue &q,const double *dA, const double *dB, double *dC, size_t size) const
     {
@@ -136,13 +126,6 @@ namespace cgcore{
 
                 // For every row
                 for(size_t i = 0; i < size; i++){
-
-                    /*
-                    #pragma unroll
-                    for(size_t j = 0; j < size; j++){
-                        sum += dA[i * size + j] * dB[j];
-                    }
-                    */
 
                     // DOT PRODUCT
                     {
@@ -169,7 +152,6 @@ namespace cgcore{
                         }
 
                         dC[i] = temp_sum; 
-                        //
                     }
                 }
             });
@@ -187,13 +169,13 @@ namespace cgcore{
     {
         #if FPGA_SIMULATOR
         auto selector = sycl::ext::intel::fpga_simulator_selector_v;
-        std::cout << "Using sim settings";
+        std::clog << "Using sim settings";
         #elif FPGA_HARDWARE
         auto selector = sycl::ext::intel::fpga_selector_v;
-        std::cout << "Using HW settings";
+        std::clog << "Using HW settings";
         #else  // #if FPGA_EMULATOR
         auto selector = sycl::ext::intel::fpga_emulator_selector_v;
-        std::cout << "Using emu settings";
+        std::clog << "Using emu settings";
         #endif
 
         // create the device queue
@@ -232,7 +214,6 @@ namespace cgcore{
             r[i] = b[i];
             d[i] = b[i];
         }
-        std::cout << "A1";
         // Copy initial data to device  
         q.memcpy(d_A, A, size*size*sizeof(double)).wait();
         q.memcpy(d_b, b, size*sizeof(double)).wait();
@@ -240,25 +221,21 @@ namespace cgcore{
         q.memcpy(d_r, r, size*sizeof(double)).wait();
         q.memcpy(d_x, x, size*sizeof(double)).wait();
 
-        std::cout << "B1";
         dot(q, d_b, d_b, d_dot1, size);
         q.wait();
         bb = d_dot1[0];
 
-        std::cout << "C1";
         for(num_iters = 1; num_iters <= max_iters; num_iters++)
         {
             // Calculating A*d
             matrix_vector_mul(q, d_A, d_d, d_Ad, size);
             q.wait();
 
-            std::cout << "D1";
             // Calculating alpha = d*r / (Ad * d) in parallel
             dot(q, d_d, d_r, d_dot1, size);
             dot(q, d_Ad, d_d, d_dot2, size);
             q.wait();
 
-            std::cout << "E1";
             alpha =  d_dot1[0]/d_dot2[0];
 
             // Updating x along d and r
