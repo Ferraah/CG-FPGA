@@ -1,5 +1,7 @@
+# Set the compiler
 set(CMAKE_CXX_COMPILER icpx)
 
+# Set output directories
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -21,8 +23,7 @@ set(USER_FLAGS ${USER_FLAGS})
 
 # Use cmake -DUSER_INCLUDE_PATHS=<paths> to set extra paths for general
 # compilation.
-set(USER_INCLUDE_PATHS ${USER_INCLUDE_PATHS})
-
+set(USER_INCLUDE_PATHS ${USER_INCLUDE_PATHS} ${CMAKE_SOURCE_DIR}/challenge/include/cg)
 
 ##############################################################################
 ### no changes after here
@@ -88,57 +89,72 @@ set(FPGA_LINK_FLAGS -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_FPGA_FLAGS} -reu
 #set(MKL_COMPILE_FLAGS $<TARGET_PROPERTY:MKL::MKL,INTERFACE_COMPILE_OPTIONS>)
 #set(MKL_INCLUDE_FLAGS $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
 #set(MKL_LINK_FLAGS $<LINK_ONLY:MKL::MKL>)
+
+###############################################################################
+### Options to enable/disable specific targets
+###############################################################################
+option(BUILD_EMULATOR "Build the FPGA emulator target" OFF)
+option(BUILD_SIMULATOR "Build the FPGA simulator target" OFF)
+option(BUILD_REPORT "Build the FPGA report target" OFF)
+option(BUILD_FPGA "Build the FPGA hardware target" OFF)
+
 ###############################################################################
 ### FPGA Emulator
 ###############################################################################
-add_library(${EMULATOR_TARGET} SHARED ${SOURCE_FILES})
-target_compile_options(${EMULATOR_TARGET} PUBLIC ${COMMON_COMPILE_FLAGS} ${MKL_COMPILE_FLAGS})
-target_compile_options(${EMULATOR_TARGET} PRIVATE ${EMULATOR_COMPILE_FLAGS})
-target_include_directories(${EMULATOR_TARGET} PUBLIC ${MKL_INCLUDE_FLAGS})
-target_link_libraries(${EMULATOR_TARGET} ${COMMON_LINK_FLAGS} ${MKL_LINK_FLAGS})
-target_link_libraries(${EMULATOR_TARGET} ${EMULATOR_LINK_FLAGS})
-target_link_libraries(${EMULATOR_TARGET} MPI::MPI_CXX)
-set_target_properties(${EMULATOR_TARGET} PROPERTIES OUTPUT_NAME ${EMULATOR_OUTPUT_NAME})
+if(BUILD_EMULATOR)
+    add_library(${EMULATOR_TARGET} SHARED ${SOURCE_FILES})
+    target_compile_options(${EMULATOR_TARGET} PUBLIC ${COMMON_COMPILE_FLAGS} ${MKL_COMPILE_FLAGS})
+    target_compile_options(${EMULATOR_TARGET} PRIVATE ${EMULATOR_COMPILE_FLAGS})
+    target_include_directories(${EMULATOR_TARGET} PUBLIC ${MKL_INCLUDE_FLAGS})
+    target_link_libraries(${EMULATOR_TARGET} ${COMMON_LINK_FLAGS} ${MKL_LINK_FLAGS})
+    target_link_libraries(${EMULATOR_TARGET} ${EMULATOR_LINK_FLAGS})
+    target_link_libraries(${EMULATOR_TARGET} MPI::MPI_CXX)
+    set_target_properties(${EMULATOR_TARGET} PROPERTIES OUTPUT_NAME ${EMULATOR_OUTPUT_NAME})
+endif()
 
 ###############################################################################
 ### FPGA Simulator
 ###############################################################################
-add_library(${SIMULATOR_TARGET} SHARED EXCLUDE_FROM_ALL ${SOURCE_FILES})
-target_compile_options(${SIMULATOR_TARGET} PRIVATE ${COMMON_COMPILE_FLAGS})
-target_compile_options(${SIMULATOR_TARGET} PRIVATE ${SIMULATOR_COMPILE_FLAGS})
-target_link_libraries(${SIMULATOR_TARGET} ${COMMON_LINK_FLAGS})
-target_link_libraries(${SIMULATOR_TARGET} ${SIMULATOR_LINK_FLAGS})
-target_link_libraries(${SIMULATOR_TARGET} MPI::MPI_CXX)
-set_target_properties(${SIMULATOR_TARGET} PROPERTIES OUTPUT_NAME ${SIMULATOR_OUTPUT_NAME})
+if(BUILD_SIMULATOR)
+    add_library(${SIMULATOR_TARGET} SHARED EXCLUDE_FROM_ALL ${SOURCE_FILES})
+    target_compile_options(${SIMULATOR_TARGET} PRIVATE ${COMMON_COMPILE_FLAGS})
+    target_compile_options(${SIMULATOR_TARGET} PRIVATE ${SIMULATOR_COMPILE_FLAGS})
+    target_link_libraries(${SIMULATOR_TARGET} ${COMMON_LINK_FLAGS})
+    target_link_libraries(${SIMULATOR_TARGET} ${SIMULATOR_LINK_FLAGS})
+    target_link_libraries(${SIMULATOR_TARGET} MPI::MPI_CXX)
+    set_target_properties(${SIMULATOR_TARGET} PROPERTIES OUTPUT_NAME ${SIMULATOR_OUTPUT_NAME})
+endif()
 
 ###############################################################################
 ### Generate Report
 ###############################################################################
-add_library(${REPORT_TARGET} SHARED  EXCLUDE_FROM_ALL ${SOURCE_FILES})
-target_compile_options(${REPORT_TARGET} PRIVATE ${COMMON_COMPILE_FLAGS})
-target_compile_options(${REPORT_TARGET} PRIVATE ${REPORT_COMPILE_FLAGS})
+if(BUILD_REPORT)
+    add_library(${REPORT_TARGET} SHARED  EXCLUDE_FROM_ALL ${SOURCE_FILES})
+    target_compile_options(${REPORT_TARGET} PRIVATE ${COMMON_COMPILE_FLAGS})
+    target_compile_options(${REPORT_TARGET} PRIVATE ${REPORT_COMPILE_FLAGS})
 
-# The report target does not need the QACTYPES flag at link stage
-set(MODIFIED_COMMON_LINK_FLAGS_REPORT ${COMMON_LINK_FLAGS})
-list(REMOVE_ITEM MODIFIED_COMMON_LINK_FLAGS_REPORT ${QACTYPES})
+    # The report target does not need the QACTYPES flag at link stage
+    set(MODIFIED_COMMON_LINK_FLAGS_REPORT ${COMMON_LINK_FLAGS})
+    list(REMOVE_ITEM MODIFIED_COMMON_LINK_FLAGS_REPORT ${QACTYPES})
 
-target_link_libraries(${REPORT_TARGET} ${MODIFIED_COMMON_LINK_FLAGS_REPORT})
-target_link_libraries(${REPORT_TARGET} ${REPORT_LINK_FLAGS})
-target_link_libraries(${REPORT_TARGET} MPI::MPI_CXX) 
-set_target_properties(${REPORT_TARGET} PROPERTIES OUTPUT_NAME ${REPORT_OUTPUT_NAME})
-
+    target_link_libraries(${REPORT_TARGET} ${MODIFIED_COMMON_LINK_FLAGS_REPORT})
+    target_link_libraries(${REPORT_TARGET} ${REPORT_LINK_FLAGS})
+    target_link_libraries(${REPORT_TARGET} MPI::MPI_CXX) 
+    set_target_properties(${REPORT_TARGET} PROPERTIES OUTPUT_NAME ${REPORT_OUTPUT_NAME})
+endif()
 
 ###############################################################################
 ### FPGA Hardware
 ###############################################################################
-add_library(${FPGA_TARGET} EXCLUDE_FROM_ALL ${SOURCE_FILES})
-target_compile_options(${FPGA_TARGET} PRIVATE ${COMMON_COMPILE_FLAGS})
-target_compile_options(${FPGA_TARGET} PRIVATE ${FPGA_COMPILE_FLAGS})
-target_link_libraries(${FPGA_TARGET} ${COMMON_LINK_FLAGS})
-target_link_libraries(${FPGA_TARGET} ${FPGA_LINK_FLAGS})
-target_link_libraries(${FPGA_TARGET} MPI::MPI_CXX) 
-set_target_properties(${FPGA_TARGET} PROPERTIES OUTPUT_NAME ${FPGA_OUTPUT_NAME})
-
+if(BUILD_FPGA)
+    add_library(${FPGA_TARGET} SHARED EXCLUDE_FROM_ALL ${SOURCE_FILES})
+    target_compile_options(${FPGA_TARGET} PRIVATE ${COMMON_COMPILE_FLAGS})
+    target_compile_options(${FPGA_TARGET} PRIVATE ${FPGA_COMPILE_FLAGS})
+    target_link_libraries(${FPGA_TARGET} ${COMMON_LINK_FLAGS})
+    target_link_libraries(${FPGA_TARGET} ${FPGA_LINK_FLAGS})
+    target_link_libraries(${FPGA_TARGET} MPI::MPI_CXX) 
+    set_target_properties(${FPGA_TARGET} PROPERTIES OUTPUT_NAME ${FPGA_OUTPUT_NAME})
+endif()
 
 ###############################################################################
 ### This part only manipulates cmake variables to print the commands to the user
@@ -243,34 +259,37 @@ if(WIN32)
     set(EXECUTABLE_EXTENSION ".exe")
 endif()
 
-# Display the compile instructions in the emulation flow
-getCompileCommands("${COMMON_COMPILE_FLAGS}" "${EMULATOR_COMPILE_FLAGS}" "${COMMON_LINK_FLAGS}" "${EMULATOR_LINK_FLAGS}" "${EMULATOR_TARGET}" "${EMULATOR_OUTPUT_NAME}${EXECUTABLE_EXTENSION}")
+###############################################################################
+### Display compile instructions based on selected target
+###############################################################################
+if(BUILD_EMULATOR)
+    getCompileCommands("${COMMON_COMPILE_FLAGS}" "${EMULATOR_COMPILE_FLAGS}" "${COMMON_LINK_FLAGS}" "${EMULATOR_LINK_FLAGS}" "${EMULATOR_TARGET}" "${EMULATOR_OUTPUT_NAME}${EXECUTABLE_EXTENSION}")
+    add_custom_target(displayEmulationCompileCommands
+                      ${CMAKE_COMMAND} -E cmake_echo_color --cyan ""
+                      COMMENT "To compile manually:\n${COMPILE_COMMAND}\nTo link manually:\n${LINK_COMMAND}")
+    add_dependencies(${EMULATOR_TARGET} displayEmulationCompileCommands)
+endif()
 
-add_custom_target(  displayEmulationCompileCommands
-                    ${CMAKE_COMMAND} -E cmake_echo_color --cyan ""
-                    COMMENT "To compile manually:\n${COMPILE_COMMAND}\nTo link manually:\n${LINK_COMMAND}")
-add_dependencies(${EMULATOR_TARGET} displayEmulationCompileCommands)
+if(BUILD_SIMULATOR)
+    getCompileCommands("${COMMON_COMPILE_FLAGS}" "${SIMULATOR_COMPILE_FLAGS}" "${COMMON_LINK_FLAGS}" "${SIMULATOR_LINK_FLAGS}" "${SIMULATOR_TARGET}" "${SIMULATOR_OUTPUT_NAME}${EXECUTABLE_EXTENSION}")
+    add_custom_target(displaySimulationCompileCommands
+                      ${CMAKE_COMMAND} -E cmake_echo_color --cyan ""
+                      COMMENT "To compile manually:\n${COMPILE_COMMAND}\nTo link manually:\n${LINK_COMMAND}")
+    add_dependencies(${SIMULATOR_TARGET} displaySimulationCompileCommands)
+endif()
 
-# Display the compile instructions in the simulation flow
-getCompileCommands("${COMMON_COMPILE_FLAGS}" "${SIMULATOR_COMPILE_FLAGS}" "${COMMON_LINK_FLAGS}" "${SIMULATOR_LINK_FLAGS}" "${SIMULATOR_TARGET}" "${SIMULATOR_OUTPUT_NAME}${EXECUTABLE_EXTENSION}")
+if(BUILD_REPORT)
+    getCompileCommands("${COMMON_COMPILE_FLAGS}" "${REPORT_COMPILE_FLAGS}" "${MODIFIED_COMMON_LINK_FLAGS_REPORT}" "${REPORT_LINK_FLAGS}" "${REPORT_TARGET}" "${REPORT_OUTPUT_NAME}${EXECUTABLE_EXTENSION}")
+    add_custom_target(displayReportCompileCommands
+                      ${CMAKE_COMMAND} -E cmake_echo_color --cyan ""
+                      COMMENT "To compile manually:\n${COMPILE_COMMAND}\nTo link manually:\n${LINK_COMMAND}")
+    add_dependencies(${REPORT_TARGET} displayReportCompileCommands)
+endif()
 
-add_custom_target(  displaySimulationCompileCommands
-                    ${CMAKE_COMMAND} -E cmake_echo_color --cyan ""
-                    COMMENT "To compile manually:\n${COMPILE_COMMAND}\nTo link manually:\n${LINK_COMMAND}")
-add_dependencies(${SIMULATOR_TARGET} displaySimulationCompileCommands)
-
-# Display the compile instructions in the report flow
-getCompileCommands("${COMMON_COMPILE_FLAGS}" "${REPORT_COMPILE_FLAGS}" "${MODIFIED_COMMON_LINK_FLAGS_REPORT}" "${REPORT_LINK_FLAGS}" "${REPORT_TARGET}" "${REPORT_OUTPUT_NAME}${EXECUTABLE_EXTENSION}")
-
-add_custom_target(  displayReportCompileCommands
-                    ${CMAKE_COMMAND} -E cmake_echo_color --cyan ""
-                    COMMENT "To compile manually:\n${COMPILE_COMMAND}\nTo link manually:\n${LINK_COMMAND}")
-add_dependencies(${REPORT_TARGET} displayReportCompileCommands)
-
-# Display the compile instructions in the fpga flow
-getCompileCommands("${COMMON_COMPILE_FLAGS}" "${FPGA_COMPILE_FLAGS}" "${COMMON_LINK_FLAGS}" "${FPGA_LINK_FLAGS}" "${FPGA_TARGET}" "${FPGA_OUTPUT_NAME}${EXECUTABLE_EXTENSION}")
-
-add_custom_target(  displayFPGACompileCommands
-                    ${CMAKE_COMMAND} -E cmake_echo_color --cyan ""
-                    COMMENT "To compile manually:\n${COMPILE_COMMAND}\nTo link manually:\n${LINK_COMMAND}")
-add_dependencies(${FPGA_TARGET} displayFPGACompileCommands)
+if(BUILD_FPGA)
+    getCompileCommands("${COMMON_COMPILE_FLAGS}" "${FPGA_COMPILE_FLAGS}" "${COMMON_LINK_FLAGS}" "${FPGA_LINK_FLAGS}" "${FPGA_TARGET}" "${FPGA_OUTPUT_NAME}${EXECUTABLE_EXTENSION}")
+    add_custom_target(displayFPGACompileCommands
+                      ${CMAKE_COMMAND} -E cmake_echo_color --cyan ""
+                      COMMENT "To compile manually:\n${COMPILE_COMMAND}\nTo link manually:\n${LINK_COMMAND}")
+    add_dependencies(${FPGA_TARGET} displayFPGACompileCommands)
+endif()

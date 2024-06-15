@@ -21,6 +21,12 @@ bool AreArraysEqual(double* arr1, double* arr2, size_t size, double tol) {
     }
     return true;
 }
+int usm_selector(const sycl::device& dev) {
+  if (dev.has(sycl::aspect::usm_device_allocations)) {
+    return 1;
+  }
+  return -1;
+}
 
 sycl::queue create_queue(){
     #if FPGA_SIMULATOR
@@ -42,6 +48,8 @@ sycl::queue create_queue(){
     std::clog << "Running on device: "
                 << device.get_info<sycl::info::device::name>().c_str()
                 << std::endl;
+            
+    std::clog << "Supports USM: " << (bool)usm_selector(device)<<std::endl;
     return q;
  
 
@@ -91,8 +99,8 @@ TEST(CG_TEST, dot){
 }
 
 TEST(CG_TESTS, full){
-    const char *m_path =  "/project/home/p200301/tests/matrix100.bin";
-    const char *rhs_path =  "/project/home/p200301/tests/rhs100.bin";
+    const char *m_path =  "/project/home/p200301/tests/matrix1000.bin";
+    const char *rhs_path =  "/project/home/p200301/tests/rhs1000.bin";
 
     double *matrix;
     double *vector;

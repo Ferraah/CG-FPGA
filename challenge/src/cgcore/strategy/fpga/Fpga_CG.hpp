@@ -1,8 +1,9 @@
 #ifndef FPGA_STRATEGY_HPP 
 #define FPGA_STRATEGY_HPP 
 
-#include "../CGStrategy.hpp"
-#include "../../utils/utils.hpp"
+
+#include "exception_handler.hpp"
+#include "cgcore.hpp"
 
 #include <cmath>
 #include <stdio.h>

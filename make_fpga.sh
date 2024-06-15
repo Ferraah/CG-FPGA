@@ -14,6 +14,5 @@ module load intel-fpga
 module load OpenMPI
 
 echo $PATH
-cd /home/users/u101373/CG-FPGA/build
-time make fpga -j 
-time make 
+cd /home/users/u101373/CG-FPGA/build_fpga
+time make -j 
