@@ -47,6 +47,15 @@ set(FPGA_LINK_FLAGS -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_FPGA_FLAGS} -reu
 target_compile_options(cg_test PRIVATE ${COMMON_COMPILE_FLAGS})
 target_link_libraries(cg_test ${COMMON_LINK_FLAGS})
 
+target_link_libraries(cg_test gtest gtest_main)
+
+#
+include_directories(${CMAKE_SOURCE_DIR}/challenge/include/cg)
+
+include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR}) 
+include(GoogleTest)
+
+
 ###############################################################################
 ### Options to enable/disable specific targets
 ###############################################################################
@@ -60,16 +69,28 @@ if(BUILD_EMULATOR)
   target_link_libraries(cg_test ${EMULATOR_TARGET} )
   target_compile_options(cg_test PRIVATE ${EMULATOR_COMPILE_FLAGS})
   target_link_libraries(cg_test ${EMULATOR_LINK_FLAGS})
+  gtest_discover_tests(cg_test
+  DISCOVERY_TIMEOUT 120)
+
 endif()
 if(BUILD_FPGA)
   target_link_libraries(cg_test ${FPGA_TARGET} )
   target_compile_options(cg_test PRIVATE ${FPGA_COMPILE_FLAGS})
   target_link_libraries(cg_test ${FPGA_COMPILE_FLAGS})
+  gtest_discover_tests(cg_test
+  DISCOVERY_TIMEOUT 120)
+
 endif()
 if(BUILD_REPORT)
-  target_link_libraries(cg_test ${REPORT_TARGET} )
+  target_compile_options(cg_test PRIVATE ${COMMON_COMPILE_FLAGS})
   target_compile_options(cg_test PRIVATE ${REPORT_COMPILE_FLAGS})
-  target_link_libraries(cg_test ${REPORT_LINK_FLAGS})
+
+  # The report target does not need the QACTYPES flag at link stage
+  set(MODIFIED_COMMON_LINK_FLAGS_REPORT ${COMMON_LINK_FLAGS})
+  list(REMOVE_ITEM MODIFIED_COMMON_LINK_FLAGS_REPORT ${QACTYPES})
+
+  target_link_libraries(cg_test ${MODIFIED_COMMON_LINK_FLAGS_REPORT})
+  target_link_libraries(cg_test  ${REPORT_LINK_FLAGS})
 endif()
 if(BUILD_SIMULATOR)
   target_link_libraries(cg_test ${SIMULATOR_TARGET} )
@@ -80,14 +101,3 @@ endif()
 
 
 
-target_link_libraries(cg_test gtest gtest_main)
-
-#
-include_directories(${CMAKE_SOURCE_DIR}/challenge/include/cg)
-
-include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR}) 
-include(GoogleTest)
-
-
-gtest_discover_tests(cg_test
-DISCOVERY_TIMEOUT 120)

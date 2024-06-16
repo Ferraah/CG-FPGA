@@ -1,0 +1,2 @@
+/apps/USE/easybuild/staging/2023.1/software/binutils/2.40-GCCcore-12.3.0/bin/ar qc ../../lib/libgtest_main.a CMakeFiles/gtest_main.dir/src/gtest_main.cc.o
+/apps/USE/easybuild/staging/2023.1/software/binutils/2.40-GCCcore-12.3.0/bin/ranlib ../../lib/libgtest_main.a

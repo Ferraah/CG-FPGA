@@ -21,6 +21,7 @@ bool AreArraysEqual(double* arr1, double* arr2, size_t size, double tol) {
     }
     return true;
 }
+
 int usm_selector(const sycl::device& dev) {
   if (dev.has(sycl::aspect::usm_device_allocations)) {
     return 1;
