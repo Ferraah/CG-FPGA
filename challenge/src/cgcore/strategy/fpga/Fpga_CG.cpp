@@ -12,12 +12,12 @@ constexpr uint II_CYCLES = 64;
 namespace cgcore{
     
     /**
-     * @param dA The reference to the first vector in device memory 
-     * @param dB The reference to the first vector in device memory 
-     * @param dC The reference to the result in device memory
+     * @param dA_in The reference to the first vector in device memory 
+     * @param dB_in The reference to the first vector in device memory 
+     * @param dC_out The reference to the result in device memory
      * @param size The size of the vectors 
     */
-    void FPGA_CG::dot(sycl::queue &q, const double *dA, const double *dB, double *dC,  size_t size) const 
+    void FPGA_CG::dot(const double *dA_in, const double *dB_in, double *dC_out,  size_t size) const 
     {
         q.submit([&](sycl::handler &h){
             h.single_task<DotProduct>([=](){
@@ -62,101 +62,87 @@ namespace cgcore{
      * @param dY Reference to second vector in device memory
      * @param size Size of the two vectors
     */
-    void FPGA_CG::vec_sum(sycl::queue &q,double alpha, const double *dX, double beta, double *dY, size_t size) const
+    void FPGA_CG::vec_sum(const double alpha, const double *dX_in, const double beta, double *dY_in_out, size_t size) const
     {
-        q.submit([&](sycl::handler &h){
-            h.single_task<VecSum>([=](){
+        const int aux_dim = II_CYCLES + 1;
 
-                const int aux_dim = II_CYCLES + 1;
-
-                double aux_reg[aux_dim];
-                
-                for (int i = 0; i < aux_dim; i++)
-                {
-                    aux_reg[i] = 0;
-                }
+        double aux_reg[aux_dim];
+        
+        for (int i = 0; i < aux_dim; i++)
+        {
+            aux_reg[i] = 0;
+        }
 
 
-                int n_cyles = (size + aux_dim - 1) / (aux_dim);
+        int n_cyles = (size + aux_dim - 1) / (aux_dim);
 
-                int base;
+        int base;
 
-                for (int i = 0; i < n_cyles; ++i)
-                {
-                    base = i*aux_dim; 
+        for (int i = 0; i < n_cyles; ++i)
+        {
+            base = i*aux_dim; 
 
-                    
-                    for (int j = 0; j < aux_dim; ++j)
-                    {
-                        if (base + j < size)
-                            aux_reg[j] =  alpha * dX[base + j] + beta * dY[base + j];
-                        else 
-                            aux_reg[j] = 0;
-                    }
+            
+            for (int j = 0; j < aux_dim; ++j)
+            {
+                if (base + j < size)
+                    aux_reg[j] =  alpha * dX[base + j] + beta * dY[base + j];
+                else 
+                    aux_reg[j] = 0;
+            }
 
-                    
-                    for (int j = 0; j < aux_dim; ++j)
-                    {
-                        if (base + j < size)
-                            dY[base + j] = aux_reg[j];
-                    }
+            
+            for (int j = 0; j < aux_dim; ++j)
+            {
+                if (base + j < size)
+                    dY[base + j] = aux_reg[j];
+            }
 
-                }
-                
-            });
-        });
-
+        }
     }
 
     /**
      * Run the matrix vector multiplication on the selected device. 
-     * @param q Reference to queue
-     * @param dA the device pointer to the matrix A, already loaded in device memory. 
-     * @param dB the device pointer to the vector b, already loaded in device memory.
-     * @param dC the device pointer to the result c, in device memory.
+     * @param dA_in the device pointer to the matrix A, already loaded in device memory. 
+     * @param dB_in the device pointer to the vector b, already loaded in device memory.
+     * @param dC_out the device pointer to the result c, in device memory.
      * @param size size of the vector
     */
-    void FPGA_CG::matrix_vector_mul(sycl::queue &q,const double *dA, const double *dB, double *dC, size_t size) const
+    void FPGA_CG::matrix_vector_mul(const double *dA_in, const double *dB_in, double *dC_out, size_t size) const
     {
-        q.submit([&](sycl::handler &h){
-            h.single_task<GEMV>([=](){
-                
-                //Create shift register with II_CYCLE+1 elements
-                double shift_reg[II_CYCLES+1];
+        //Create shift register with II_CYCLE+1 elements
+        double shift_reg[II_CYCLES+1];
 
-                // For every row
-                for(size_t i = 0; i < size; i++){
+        // For every row
+        for(size_t i = 0; i < size; i++){
 
-                    // DOT PRODUCT
-                    {
-                        // Initialize all elements of the register to 0
-                        for (int k = 0; k < II_CYCLES + 1; k++) {
-                            shift_reg[k] = 0;
-                        }
-
-                        for(int j=0; j < size; j++){
-
-                            shift_reg[II_CYCLES] = shift_reg[0] + dA[i*size + j]*dB[j];
-
-                            #pragma unroll
-                            for(int k=0;k<II_CYCLES;k++){
-                                shift_reg[k]=shift_reg[k+1];
-                            }
-
-                        }
-
-                        double temp_sum = 0; 
-                        #pragma unroll
-                        for (int k = 0; k < II_CYCLES; k++) {
-                            temp_sum += shift_reg[k];
-                        }
-
-                        dC[i] = temp_sum; 
-                    }
+            // DOT PRODUCT
+            {
+                // Initialize all elements of the register to 0
+                for (int k = 0; k < II_CYCLES + 1; k++) {
+                    shift_reg[k] = 0;
                 }
-            });
-        });
 
+                for(int j=0; j < size; j++){
+
+                    shift_reg[II_CYCLES] = shift_reg[0] + dA_in[i*size + j]*dB_in[j];
+
+                    #pragma unroll
+                    for(int k=0;k<II_CYCLES;k++){
+                        shift_reg[k]=shift_reg[k+1];
+                    }
+
+                }
+
+                double temp_sum = 0; 
+                #pragma unroll
+                for (int k = 0; k < II_CYCLES; k++) {
+                    temp_sum += shift_reg[k];
+                }
+
+                dC_out[i] = temp_sum; 
+            }
+        }
     }
 
     FPGA_CG::FPGA_CG(){
@@ -179,24 +165,25 @@ namespace cgcore{
         #endif
 
         // create the device queue
-        sycl::queue q(selector, sycl::property::queue::in_order{} );
+        sycl::queue q(selector);
         // make sure the device supports USM host allocations
         auto device = q.get_device();
 
         std::clog << "Running on device: "
                   << device.get_info<sycl::info::device::name>().c_str()
                   << std::endl;
- 
-        // Device memory --------------------------------------- 
-        auto d_A  = sycl::malloc_device<double>(size*size, q);
-        auto d_Ad = sycl::malloc_device<double>(size, q);
-        auto d_d  = sycl::malloc_device<double>(size, q);
-        auto d_r  = sycl::malloc_device<double>(size, q);
-        auto d_x  = sycl::malloc_device<double>(size, q);
-        auto d_b  = sycl::malloc_device<double>(size, q);
+
+        // Host memory --------------------------------------- 
+        double* d_A  = new double[size*size];
+        double* d_Ad = new double[size];
+        double* d_d  = new double[size];
+        double* d_r  = new double[size];
+        double* d_x  = new double[size];
+        double* d_b  = new double[size];
+
         // dot product results
-        auto d_dot1 = sycl::malloc_shared<double>(1, q);
-        auto d_dot2 = sycl::malloc_shared<double>(1, q);
+        double* d_dot1 = new double[1];
+        double* d_dot2 = new double[1];
         // ----------------------------------------------------
 
         double alpha, beta;
@@ -208,61 +195,210 @@ namespace cgcore{
 
         int num_iters;
 
+        // Buffers ---------------------------------------------
+
+        sycl::buffer<double> buffer_d_A  (&d_A[0], size*size);
+        sycl::buffer<double> buffer_d_Ad (&d_Ad[0], size);
+        sycl::buffer<double> buffer_d_d  (&d_d[0], size);
+        sycl::buffer<double> buffer_d_r  (&d_r[0], size);
+        sycl::buffer<double> buffer_d_x  (&d_x[0], size);
+        sycl::buffer<double> buffer_d_b  (&b[0], size);
+        
+        sycl::buffer<double> buffer_d_dot1  (&d_dot1[0], 1);
+        sycl::buffer<double> buffer_d_dot2 (&d_dot2[0], 1);
+
+
+        sycl::buffer<double> buffer_r (&r[0], size);
+        sycl::buffer<double> buffer_d (&d[0], size);
+        // -----------------------------------------------------
+
+        // Initializing the vectors with host accessors --------
+        
+        sycl::host_accessor x_acc(buffer_d_x);
+        sycl::host_accessor r_acc(buffer_d_r);
+        sycl::host_accessor d_acc(buffer_d_d);
+        sycl::host_accessor b_acc(buffer_d_b);
+
+
         for(size_t i = 0; i < size; i++)
         {
-            x[i] = 0.0;
-            r[i] = b[i];
-            d[i] = b[i];
+            x_acc[i] = 0.0;
+            r_acc[i] = b_acc[i];
+            d_acc[i] = b_acc[i];
         }
-        // Copy initial data to device  
-        q.memcpy(d_A, A, size*size*sizeof(double)).wait();
-        q.memcpy(d_b, b, size*sizeof(double)).wait();
-        q.memcpy(d_d, d, size*sizeof(double)).wait();
-        q.memcpy(d_r, r, size*sizeof(double)).wait();
-        q.memcpy(d_x, x, size*sizeof(double)).wait();
+        // ------------------------------------------------------
+        
+        
+        q.submit([&](sycl::handler &h)
+        {
+            sycl::accessor acc_d (buffer_d_d, h, sycl::read_only);
+            sycl::accessor acc_b (buffer_d_b, h, sycl::read_only);
+            sycl::accessor acc_dot1 (buffer_d_dot1, h, sycl::read_write);
 
-        dot(q, d_b, d_b, d_dot1, size);
-        q.wait();
-        bb = d_dot1[0];
+            h.single_task<DotProduct>([=](){
+                dot(&acc_d[0], &acc_b[0], &acc_dot1[0], size);
+            });
+        });
+
+        {
+            sycl::host_accessor dot1_acc(d_dot1);
+            bb = dot1_acc[0];
+        }
 
         for(num_iters = 1; num_iters <= max_iters; num_iters++)
         {
             // Calculating A*d
-            matrix_vector_mul(q, d_A, d_d, d_Ad, size);
-            q.wait();
+
+            q.submit([&](sycl::handler &h)
+            {
+                sycl::accessor acc_A (buffer_d_A, h, sycl::read_only);
+                sycl::accessor acc_d (buffer_d_d, h, sycl::read_only);
+                sycl::accessor acc_Ad (bufffer_d_Ad, h, sycl::read_write);
+
+                h.single_task<GEMV>([=](){
+                    matrix_vector_mul(&acc_A[0], &acc_d[0], &acc_Ad[0], size);
+                });
+            });
+
 
             // Calculating alpha = d*r / (Ad * d) in parallel
-            dot(q, d_d, d_r, d_dot1, size);
-            dot(q, d_Ad, d_d, d_dot2, size);
-            q.wait();
+            
+            q.submit([&](sycl::handler &h)
+            {
+                sycl::accessor acc_d (buffer_d_d, h, sycl::read_only);
+                sycl::accessor acc_r (buffer_d_r, h, sycl::read_only);
+                sycl::accessor acc_dot1 (buffer_d_dot1, h, sycl::read_write);
 
-            alpha =  d_dot1[0]/d_dot2[0];
+                h.single_task<DotProduct>([=](){
+                    dot(&acc_d[0], &acc_r[0], &acc_dot1[0]);
+                });
+            });
+
+            q.submit([&](sycl::handler &h)
+            {
+                sycl::accessor acc_Ad (buffer_d_Ad, h, sycl::read_only);
+                sycl::accessor acc_d (buffer_d_d, h, sycl::read_only);
+                sycl::accessor acc_dot2 (buffer_d_dot2, h, sycl::read_write);
+
+                h.single_task<DotProduct>([=](){
+                    dot(&acc_Ad[0], &acc_d[0], &acc_dot2[0]);
+                });
+            });
+
+
+            // dot(q, d_d, d_r, d_dot1, size);
+            // dot(q, d_Ad, d_d, d_dot2, size);
+            {
+                sycl::host_accessor d_dot1_acc(buffer_d_dot1);
+                sycl::host_accessor d_dot2_acc(buffer_d_dot2);
+                alpha =  d_dot1_acc[0]/d_dot2_acc[0];
+            }
 
             // Updating x along d and r
-            vec_sum(q, alpha, d_d, 1.0, d_x, size);
-            vec_sum(q, -alpha, d_Ad, 1.0, d_r, size);
-            q.wait();
+
+            q.submit([&](sycl::handler &h)
+            {
+                sycl::accessor acc_d (buffer_d_d, h, sycl::read_only);
+                sycl::accessor acc_x (buffer_d_x, h, sycl::read_write);
+
+                h.single_task<VecSum>([=]()
+                {
+                    vec_sum(alpha, &acc_d[0], 1.0, &acc_x[0], size);
+                });
+            });
+
+            q.submit([&](sycl::handler &h)
+            {
+                sycl::accessor acc_Ad (buffer_d_Ad, h, sycl::read_only);
+                sycl::accessor acc_r (buffer_d_r, h, sycl::read_write);
+
+                h.single_task<VecSum>([=]()
+                {
+                    vec_sum(-alpha, &acc_Ad[0], 1.0, &acc_r[0], size);
+                });
+            });
+
+            // vec_sum(q, alpha, d_d, 1.0, d_x, size);
+            // vec_sum(q, -alpha, d_Ad, 1.0, d_r, size);
 
             // Calculating Beta
-            dot(q, d_Ad, d_r, d_dot1, size);
-            dot(q, d_Ad, d_d, d_dot2, size);
-            q.wait();
+            q.submit([&](sycl::handler &h)
+            {
+                sycl::accessor acc_Ad (buffer_d_Ad, h, sycl::read_only);
+                sycl::accessor acc_r (buffer_d_r, h, sycl::read_only);
+                sycl::accessor acc_dot1 (buffer_d_dot1, h, sycl::read_write);
 
-            beta =  d_dot1[0]/d_dot2[0];
+                h.single_task<DotProduct>([=](){
+                    dot(&acc_Ad[0], &acc_r[0], &acc_dot1[0], size);
+                });
+            });
+
+            q.submit([&](sycl::handler &h)
+            {
+                sycl::accessor acc_Ad (buffer_d_Ad, h, sycl::read_only);
+                sycl::accessor acc_d (buffer_d_d, h, sycl::read_only);
+                sycl::accessor acc_dot2 (buffer_d_dot2, h, sycl::read_write);
+
+                h.single_task<DotProduct>([=](){
+                    dot(&acc_Ad[0], &acc_d[0], &acc_dot2[0], size);
+                });
+            });
+
+
+            // dot(q, d_Ad, d_r, d_dot1, size);
+            // dot(q, d_Ad, d_d, d_dot2, size);
+
+            {
+                sycl::host_accessor d_dot1_acc(buffer_d_dot1);
+                sycl::host_accessor d_dot2_acc(buffer_d_dot2);
+                beta =  d_dot1_acc[0]/d_dot2_acc[0];
+            }
 
             // Updating d
-            vec_sum(q, 1.0, d_r, -beta, d_d, size);
-            q.wait();
+
+            q.submit([&](sycl::handler &h)
+            {
+                sycl::accessor acc_r (buffer_d_r, h, sycl::read_only);
+                sycl::accessor acc_d (buffer_d_d, h, sycl::read_write);
+
+                h.single_task<VecSum>([=]()
+                {
+                    vec_sum(1.0, &acc_r[0], -beta, &acc_d[0], size);
+                });
+            });
+
+            // vec_sum(q, 1.0, d_r, -beta, d_d, size);
 
             // Checking residual conditions
-            dot(q, d_r, d_r, d_dot1, size);
-            q.wait();
-            rr = d_dot1[0]; 
+
+            q.submit([&](sycl::handler &h)
+            {
+                sycl::accessor acc_r (buffer_d_r, h, sycl::read_only);
+                sycl::accessor acc_dot1 (buffer_d_dot1, h, sycl::read_write);
+
+                h.single_task<DotProduct>([=](){
+                    dot(&acc_r[0], &acc_r[0], &acc_dot1[0], size);
+                });
+            });
+
+            // dot(q, d_r, d_r, d_dot1, size);
+
+            {
+                sycl::host_accessor d_dot1_acc (buffer_d_dot1);
+                rr = d_dot1_acc[0]; 
+            }
 
             if(std::sqrt(rr / bb) < rel_error) { break; }
         }
 
-        q.memcpy(x, d_x, size*sizeof(double)).wait();
+        }
+
+        sycl::host_accessor d_x_acc (buffer_d_x);
+        for (unsigned int i = 0; i < size; ++i)
+        {
+            x[i] = d_x_acc[i];
+        }
+        // q.memcpy(x, d_x, size*sizeof(double)).wait();
 
         delete[] d;
         delete[] r;
@@ -277,12 +413,12 @@ namespace cgcore{
         }
         
 
-        sycl::free(d_A, q);
-        sycl::free(d_Ad, q);
-        sycl::free(d_d, q);
-        sycl::free(d_r, q);
-        sycl::free(d_x, q);
-        sycl::free(d_b, q);
+        delete[] d_A;
+        delete[] d_Ad;
+        delete[] d_d;
+        delete[] d_r;
+        delete[] d_x;
+        delete[] d_b;
     }
 
     /**
