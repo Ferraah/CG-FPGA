@@ -195,8 +195,13 @@ namespace cgcore{
         auto d_x  = sycl::malloc_device<double>(size, q);
         auto d_b  = sycl::malloc_device<double>(size, q);
         // dot product results
-        auto d_dot1 = sycl::malloc_shared<double>(1, q);
-        auto d_dot2 = sycl::malloc_shared<double>(1, q);
+
+        auto h_dot1 = sycl::malloc_host<double>(1, q);
+        auto h_dot2 = sycl::malloc_host<double>(1, q);
+
+
+        auto d_dot1 = sycl::malloc_device<double>(1, q);
+        auto d_dot2 = sycl::malloc_device<double>(1, q);
         // ----------------------------------------------------
 
         double alpha, beta;
@@ -223,7 +228,8 @@ namespace cgcore{
 
         dot(q, d_b, d_b, d_dot1, size);
         q.wait();
-        bb = d_dot1[0];
+        q.memcpy(h_dot1, d_dot1, 1*sizeof(double)).wait();
+        bb = h_dot1[0];
 
         for(num_iters = 1; num_iters <= max_iters; num_iters++)
         {
@@ -236,7 +242,10 @@ namespace cgcore{
             dot(q, d_Ad, d_d, d_dot2, size);
             q.wait();
 
-            alpha =  d_dot1[0]/d_dot2[0];
+
+            q.memcpy(h_dot1, d_dot1, 1*sizeof(double)).wait();
+            q.memcpy(h_dot2, d_dot2, 1*sizeof(double)).wait();
+            alpha =  h_dot1[0]/h_dot2[0];
 
             // Updating x along d and r
             vec_sum(q, alpha, d_d, 1.0, d_x, size);
@@ -248,7 +257,9 @@ namespace cgcore{
             dot(q, d_Ad, d_d, d_dot2, size);
             q.wait();
 
-            beta =  d_dot1[0]/d_dot2[0];
+            q.memcpy(h_dot1, d_dot1, 1*sizeof(double)).wait();
+            q.memcpy(h_dot2, d_dot2, 1*sizeof(double)).wait();
+            beta =  h_dot1[0]/h_dot2[0];
 
             // Updating d
             vec_sum(q, 1.0, d_r, -beta, d_d, size);
@@ -257,7 +268,8 @@ namespace cgcore{
             // Checking residual conditions
             dot(q, d_r, d_r, d_dot1, size);
             q.wait();
-            rr = d_dot1[0]; 
+            q.memcpy(h_dot1, d_dot1, 1*sizeof(double)).wait();
+            rr = h_dot1[0]; 
 
             if(std::sqrt(rr / bb) < rel_error) { break; }
         }
@@ -283,6 +295,11 @@ namespace cgcore{
         sycl::free(d_r, q);
         sycl::free(d_x, q);
         sycl::free(d_b, q);
+        sycl::free(d_dot1, q);
+        sycl::free(d_dot2, q);
+
+        sycl::free(h_dot1, q);
+        sycl::free(h_dot2, q);
     }
 
     /**

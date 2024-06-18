@@ -60,21 +60,26 @@ TEST(CG_TEST, vec_sum){
     sycl::queue q = create_queue(); 
     constexpr int n = 1024;
 
-    auto d_vec = sycl::malloc_shared<double>(n*sizeof(double), q); 
+    auto d_vec = sycl::malloc_device<double>(n*sizeof(double), q); 
+    auto h_vec = sycl::malloc_host<double>(n*sizeof(double), q); 
+
     double *expected;
 
     for(int i=0; i<n; i++) 
-        d_vec[i] = 1.0; 
+        h_vec[i] = 1.0; 
     
     utils::create_vector(expected, n, 2.0);
 
     FPGA_CG strategy;
+    q.memcpy(d_vec, h_vec, n*sizeof(double)).wait();
     strategy.vec_sum(q, 1.0, d_vec, 1.0, d_vec, n);
     q.wait();
+    q.memcpy(h_vec, d_vec, n*sizeof(double)).wait();
 
-    ASSERT_TRUE(AreArraysEqual(d_vec, expected, n, 0));
+    ASSERT_TRUE(AreArraysEqual(h_vec, expected, n, 0));
 
     sycl::free(d_vec, q);
+    sycl::free(h_vec, q);
     delete [] expected;
 
 }
@@ -83,19 +88,27 @@ TEST(CG_TEST, dot){
     sycl::queue q = create_queue(); 
     constexpr int n = 1024;
 
-    auto d_vec = sycl::malloc_shared<double>(n*sizeof(double), q); 
-    auto d_res = sycl::malloc_shared<double>(1*sizeof(double), q); 
-    
+    auto d_vec = sycl::malloc_device<double>(n*sizeof(double), q);
+    auto h_vec = sycl::malloc_host<double>(n*sizeof(double), q); 
+
+    auto d_res = sycl::malloc_device<double>(1*sizeof(double), q); 
+    auto h_res = sycl::malloc_host<double> (1*sizeof(double), q);
+
     for(int i=0; i<n; i++) 
-        d_vec[i] = 1;
+        h_vec[i] = 1;
     
     FPGA_CG strategy;
+    q.memcpy(d_vec, h_vec, n*sizeof(double)).wait();
     strategy.dot(q, d_vec, d_vec, d_res, n);
     q.wait();
+    q.memcpy(h_res, d_res, 1*sizeof(double)).wait();
+    
 
     ASSERT_EQ(d_res[0], (double)n);
     sycl::free(d_vec, q);
+    sycl::free(h_vec, q);
     sycl::free(d_res, q);
+    sycl::free(h_res, q);
 
 }
 
