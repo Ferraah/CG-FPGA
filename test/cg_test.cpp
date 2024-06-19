@@ -61,7 +61,7 @@ TEST(CG_TEST, vec_sum){
     constexpr int n = 1024;
 
     auto d_vec = sycl::malloc_device<double>(n*sizeof(double), q); 
-    auto h_vec = new double[n]; 
+    auto *h_vec = new (std::align_val_t{ 64 }) double[n]; 
 
     double *expected;
 
@@ -89,10 +89,10 @@ TEST(CG_TEST, dot){
     constexpr int n = 1024;
 
     auto d_vec = sycl::malloc_device<double>(n*sizeof(double), q);
-    auto h_vec = new double[n]; 
+    auto *h_vec = new (std::align_val_t{ 64 }) double[n]; 
 
     auto d_res = sycl::malloc_device<double>(1*sizeof(double), q); 
-    auto h_res = new double[1];
+    auto *h_res = new (std::align_val_t{ 64 }) double[1];
 
     for(int i=0; i<n; i++) 
         h_vec[i] = 1;

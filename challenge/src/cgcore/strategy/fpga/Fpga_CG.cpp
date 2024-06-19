@@ -196,8 +196,8 @@ namespace cgcore{
         auto d_b  = sycl::malloc_device<double>(size, q);
         // dot product results
 
-        double* h_dot1 = new double[1];
-        double* h_dot2 = new double[1];
+        double* h_dot1 = new (std::align_val_t{ 64 }) double[1];
+        double* h_dot2 = new (std::align_val_t{ 64 }) double[1];
 
 
         auto d_dot1 = sycl::malloc_device<double>(1, q);
