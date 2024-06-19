@@ -196,8 +196,8 @@ namespace cgcore{
         auto d_b  = sycl::malloc_device<double>(size, q);
         // dot product results
 
-        auto h_dot1 = sycl::malloc_host<double>(1, q);
-        auto h_dot2 = sycl::malloc_host<double>(1, q);
+        double* h_dot1 = new double[1];
+        double* h_dot2 = new double[1];
 
 
         auto d_dot1 = sycl::malloc_device<double>(1, q);
@@ -298,8 +298,8 @@ namespace cgcore{
         sycl::free(d_dot1, q);
         sycl::free(d_dot2, q);
 
-        sycl::free(h_dot1, q);
-        sycl::free(h_dot2, q);
+        delete[] h_dot1;
+        delete[] h_dot2;
     }
 
     /**

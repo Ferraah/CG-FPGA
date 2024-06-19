@@ -61,7 +61,7 @@ TEST(CG_TEST, vec_sum){
     constexpr int n = 1024;
 
     auto d_vec = sycl::malloc_device<double>(n*sizeof(double), q); 
-    auto h_vec = sycl::malloc_host<double>(n*sizeof(double), q); 
+    auto h_vec = new double[n]; 
 
     double *expected;
 
@@ -79,8 +79,8 @@ TEST(CG_TEST, vec_sum){
     ASSERT_TRUE(AreArraysEqual(h_vec, expected, n, 0));
 
     sycl::free(d_vec, q);
-    sycl::free(h_vec, q);
-    delete [] expected;
+    delete[] expected;
+    delete[] h_vec;
 
 }
 
@@ -89,10 +89,10 @@ TEST(CG_TEST, dot){
     constexpr int n = 1024;
 
     auto d_vec = sycl::malloc_device<double>(n*sizeof(double), q);
-    auto h_vec = sycl::malloc_host<double>(n*sizeof(double), q); 
+    auto h_vec = new double[n]; 
 
     auto d_res = sycl::malloc_device<double>(1*sizeof(double), q); 
-    auto h_res = sycl::malloc_host<double> (1*sizeof(double), q);
+    auto h_res = new double[1];
 
     for(int i=0; i<n; i++) 
         h_vec[i] = 1;
@@ -106,10 +106,10 @@ TEST(CG_TEST, dot){
 
     ASSERT_EQ(d_res[0], (double)n);
     sycl::free(d_vec, q);
-    sycl::free(h_vec, q);
     sycl::free(d_res, q);
-    sycl::free(h_res, q);
 
+    delete[] h_res;
+    delete[] h_vec;
 }
 
 TEST(CG_TESTS, full){
