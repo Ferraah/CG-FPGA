@@ -276,3 +276,11 @@ void utils::mpi::mpi_print_vector(const char* filename, const double* vector, co
 
     MPI_File_close(&file);    
 }
+
+
+template<typename F, typename... Args>
+double utils::funcTime(F func, Args&&... args){
+    TimeVar t1=timeNow();
+    func(std::forward<Args>(args)...);
+    return duration(timeNow()-t1);
+}

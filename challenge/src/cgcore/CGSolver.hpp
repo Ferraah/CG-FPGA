@@ -28,7 +28,7 @@ namespace cgcore{
              * @param rel_error Relative error to achieve 
              * 
             */
-            void solve(const double * A, const double * b, double * x, size_t size, int max_iters, double rel_error){
+            virtual void solve(const double * A, const double * b, double * x, size_t size, int max_iters, double rel_error){
                 timer.start();
                 strategy.run(A, b, x, size, max_iters, rel_error);
                 timer.stop();
@@ -41,6 +41,7 @@ namespace cgcore{
              * @param x The pointer to the solution vector. 
             */
             void solve(const char * A_path, const char * b_path, double * &x){
+                strategy.prepare();
                 timer.start();
                 strategy.run();
                 timer.stop();
