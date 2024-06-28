@@ -9,7 +9,7 @@ namespace cgcore{
     
     class Sequential : public CGStrategy{
         public: 
-            void run(const double * , const double * , double * , size_t , int , double ) const ;
+            void run(const double * , const double * , double * , size_t , int , double );
 
         //private: // For debugging 
             double dot(const double * x, const double * y, size_t size) const;

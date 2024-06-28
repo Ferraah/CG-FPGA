@@ -3,7 +3,7 @@
 
 namespace cgcore{
     
-    void Sequential::run(const double * A , const double * b, double * x, size_t size, int max_iter, double res_error) const{
+    void Sequential::run(const double * A , const double * b, double * x, size_t size, int max_iter, double res_error) {
         conjugate_gradient(A, b, x, size, max_iter, res_error);
     }
 

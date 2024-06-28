@@ -18,7 +18,7 @@ namespace cgcore{
              * @param rel_error Relative error to achieve 
              * 
             */
-            virtual void run(const double * A, const double * b, double * x, size_t size, int max_iters, double rel_error) const = 0;
+            virtual void run(const double * A, const double * b, double * x, size_t size, int max_iters, double rel_error) = 0;
     };
 
 }
