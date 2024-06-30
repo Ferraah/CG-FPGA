@@ -19,38 +19,32 @@ namespace cgcore{
     */
     void FPGA_CG::dot(const double *dA_in, const double *dB_in, double *dC_out,  size_t size) const 
     {
-        q.submit([&](sycl::handler &h){
-            h.single_task<DotProduct>([=](){
+        //Create shift register with II_CYCLE+1 elements
+        double shift_reg[II_CYCLES+1];
 
-                //Create shift register with II_CYCLE+1 elements
-                double shift_reg[II_CYCLES+1];
+        //Initialize all elements of the register to 0
+        //You must initialize the shift register 
+        for (int i = 0; i < II_CYCLES + 1; i++) {
+            shift_reg[i] = 0;
+        }
 
-                //Initialize all elements of the register to 0
-                //You must initialize the shift register 
-                for (int i = 0; i < II_CYCLES + 1; i++) {
-                    shift_reg[i] = 0;
-                }
+        for(int i=0; i< size; i++){
+            shift_reg[II_CYCLES] = shift_reg[0] + dA[i]*dB[i];
 
-                for(int i=0; i< size; i++){
-                    shift_reg[II_CYCLES] = shift_reg[0] + dA[i]*dB[i];
+            #pragma unroll
+            for(int j=0;j<II_CYCLES;j++){
+                shift_reg[j]=shift_reg[j+1];
+            }
 
-                    #pragma unroll
-                    for(int j=0;j<II_CYCLES;j++){
-                        shift_reg[j]=shift_reg[j+1];
-                    }
+        }
 
-                }
+        double temp_sum = 0; 
+        #pragma unroll
+        for (int i = 0; i < II_CYCLES; i++) {
+            temp_sum += shift_reg[i];
+        }
 
-                double temp_sum = 0; 
-                #pragma unroll
-                for (int i = 0; i < II_CYCLES; i++) {
-                    temp_sum += shift_reg[i];
-                }
-
-                dC[0] = temp_sum;
-
-            });
-        });
+        dC[0] = temp_sum;
     }
 
     /**
