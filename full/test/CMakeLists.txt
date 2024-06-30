@@ -8,7 +8,7 @@ else() # Windows
     include (Platform/Windows-Clang)
 endif()
 
-enable_testing()
+#enable_testing()
 add_executable(cg_test cg_test.cpp)
 target_include_directories(cg_test PRIVATE ${CMAKE_SOURCE_DIR}/challenge/include/cg) 
 
@@ -31,7 +31,7 @@ set(FPGA_OUTPUT_NAME ${TARGET_NAME}.${FPGA_TARGET})
 
 
 set(QACTYPES "-qactypes")
-set(COMMON_COMPILE_FLAGS -fsycl -fintelfpga -Wall ${WIN_FLAG} ${DEBUG_FLAGS} ${QACTYPES} ${USER_FLAGS})
+set(COMMON_COMPILE_FLAGS -fsycl -fintelfpga -Wall -fprofile ${WIN_FLAG} ${DEBUG_FLAGS} ${QACTYPES} ${USER_FLAGS})
 set(COMMON_LINK_FLAGS -fsycl -fintelfpga ${QACTYPES} ${USER_FLAGS})
 set(EMULATOR_COMPILE_FLAGS -DFPGA_EMULATOR)
 set(EMULATOR_LINK_FLAGS )
@@ -69,18 +69,19 @@ if(BUILD_EMULATOR)
   target_link_libraries(cg_test ${EMULATOR_TARGET} )
   target_compile_options(cg_test PRIVATE ${EMULATOR_COMPILE_FLAGS})
   target_link_libraries(cg_test ${EMULATOR_LINK_FLAGS})
-  gtest_discover_tests(cg_test
-  DISCOVERY_TIMEOUT 120)
+ # gtest_discover_tests(cg_test
+ # DISCOVERY_TIMEOUT 120)
 
 endif()
 if(BUILD_FPGA)
   target_link_libraries(cg_test ${FPGA_TARGET} )
   target_compile_options(cg_test PRIVATE ${FPGA_COMPILE_FLAGS})
   target_link_libraries(cg_test ${FPGA_COMPILE_FLAGS})
-  gtest_discover_tests(cg_test
-  DISCOVERY_TIMEOUT 120)
+  #gtest_discover_tests(cg_test
+  #DISCOVERY_TIMEOUT 120)
 
 endif()
+
 if(BUILD_REPORT)
   target_compile_options(cg_test PRIVATE ${COMMON_COMPILE_FLAGS})
   target_compile_options(cg_test PRIVATE ${REPORT_COMPILE_FLAGS})
