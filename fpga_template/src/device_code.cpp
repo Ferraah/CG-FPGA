@@ -6,12 +6,10 @@ class DotProduct;
 class GEMV;
 class VecSum;
 
-constexpr uint II_CYCLES = 16;
+constexpr uint II_CYCLES = 32;
     
-void Device::dot(sycl::queue &q, const double *dA, const double *dB, double *dC, size_t size) 
+SYCL_EXTERNAL void Device::dot(const double *dA, const double *dB, double *dC, size_t size) 
 {
-    q.submit([&](sycl::handler &h){
-        h.single_task<DotProduct>([=](){
             double shift_reg[II_CYCLES+1];
 
             for (int i = 0; i < II_CYCLES + 1; i++) {
@@ -34,14 +32,10 @@ void Device::dot(sycl::queue &q, const double *dA, const double *dB, double *dC,
             }
 
             dC[0] = temp_sum;
-        });
-    });
 }
 
-void Device::vec_sum(sycl::queue &q,double alpha, const double *dX, double beta, double *dY, size_t size) 
+SYCL_EXTERNAL void Device::vec_sum(double alpha, const double *dX, double beta, double *dY, size_t size) 
 {
-    q.submit([&](sycl::handler &h){
-        h.single_task<VecSum>([=](){
             const int aux_dim = II_CYCLES + 1;
             double aux_reg[aux_dim];
             
@@ -71,14 +65,10 @@ void Device::vec_sum(sycl::queue &q,double alpha, const double *dX, double beta,
                         dY[base + j] = aux_reg[j];
                 }
             }
-        });
-    });
 }
 
-void Device::matrix_vector_mul(sycl::queue &q,const double *dA, const double *dB, double *dC, size_t size) 
+SYCL_EXTERNAL void Device::matrix_vector_mul(const double *dA, const double *dB, double *dC, size_t size) 
 {
-    q.submit([&](sycl::handler &h){
-        h.single_task<GEMV>([=](){
             double shift_reg[II_CYCLES+1];
 
             for(size_t i = 0; i < size; i++){
@@ -104,8 +94,6 @@ void Device::matrix_vector_mul(sycl::queue &q,const double *dA, const double *dB
 
                 dC[i] = temp_sum; 
             }
-        });
-    });
 }
 
 

@@ -9,6 +9,8 @@
 #include "Timer.hpp"
 #include "sequential.hpp"
 
+#include "device_code.hpp"
+
 void full_test(std::string n_str){
 
     const std::string _m_path = "/project/home/p200301/tests/matrix" + n_str + ".bin"; 	
@@ -21,12 +23,14 @@ void full_test(std::string n_str){
     double *vector;
     double *x_fpga, *x_seq;
 
-    size_t n, m ; 
+    size_t n=10, m=10 ; 
     int max_iter = 10000;
     double res = 1.e-4;
 
     utils::read_matrix_from_file(m_path , matrix, n, m);
     utils::read_vector_from_file(rhs_path, vector, n);
+    //utils::create_matrix(matrix, n, m, 1);
+    //utils::create_vector(vector, n, 1);
 
     std::cout << n << std::endl;
     x_fpga = new (std::align_val_t{64}) double[n];
@@ -35,7 +39,10 @@ void full_test(std::string n_str){
     sycl::queue q;
     Timer timer;
     Sequential sequential;
-    
+
+    //test(A, b);
+    //return;
+
     std::cout << std::endl;
     timer.start();
     prepare(q);

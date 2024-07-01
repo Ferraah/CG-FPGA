@@ -9,9 +9,9 @@ class Device{
     public:
 
         Device(){};
-        static void dot(sycl::queue &q,const double *dA, const double *dB, double *dC, size_t size) ; 
-        static void vec_sum(sycl::queue &q,double alpha, const double *dX, double beta, double *dY, size_t size) ;
-        static void matrix_vector_mul(sycl::queue &q,const double *dA, const double *dB, double *dC, size_t size);
+        SYCL_EXTERNAL static void dot(const double *dA, const double *dB, double *dC, size_t size) ; 
+        SYCL_EXTERNAL static void vec_sum(double alpha, const double *dX, double beta, double *dY, size_t size) ;
+        SYCL_EXTERNAL static void matrix_vector_mul(const double *dA, const double *dB, double *dC, size_t size);
 };
 
 #endif
