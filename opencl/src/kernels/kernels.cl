@@ -1,7 +1,7 @@
 #define II_CYCLES 64
 #define UNROLL 4
 
-__kernel void DotProduct(__global const double *dA, __global const double *dB, __global double *dC, const unsigned size) {
+__kernel void DotProduct(__global const double* restrict dA, __global const double* restrict dB, __global double* restrict dC, const unsigned size) {
     double shift_reg[II_CYCLES+1];
 
     #pragma unroll 
@@ -27,7 +27,7 @@ __kernel void DotProduct(__global const double *dA, __global const double *dB, _
     dC[0] = temp_sum;
 }
 
-__kernel void VecSum(const double alpha, __global const double *dX, const double beta, __global double *dY, const unsigned size) {
+__kernel void VecSum(const double alpha, __global const double* restrict dX, const double beta, __global double* restrict dY, const unsigned size) {
 
     const int aux_dim = II_CYCLES + 1;
     double aux_reg[aux_dim];
@@ -56,7 +56,7 @@ __kernel void VecSum(const double alpha, __global const double *dX, const double
     }
 }
 
-__kernel void GEMV(__global const double *dA, __global const double *dB, __global double *dC, const unsigned size) 
+__kernel void GEMV(__global const double* restrict dA, __global const double* restrict dB, __global double* restrict dC, const unsigned size) 
 {
 
     double shift_reg[II_CYCLES+1];

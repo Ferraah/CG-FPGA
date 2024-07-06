@@ -7,6 +7,7 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <cassert>
 #include <map>
 #include <iostream>
@@ -34,7 +35,7 @@ typedef std::chrono::high_resolution_clock::time_point TimeVar;
 
 
 namespace utils{
-    void build_source(const std::string& path, cl::Program &program, cl::Context &context);
+    void build_source(const std::string& path, cl::Program &program, cl::Context &context, cl::Device &device);
     void load_binaries(const std::string& path, cl::Program &program, cl::Context &context, cl::Device &device);
     bool read_matrix_from_file(const char *, double *&, size_t &, size_t &);
     bool read_vector_from_file(const char * , double *& , size_t &);

@@ -1,0 +1,20 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) lxp-tools/myquota/0.3.2
+
+The following have been reloaded with a version change:
+  1) binutils/2.40 => binutils/2.40-GCCcore-12.3.0
+
+Warning: -fp-relaxed will override all instances of #pragma clang fp reassoc
+Warning: Fast compile on S10 device family is preliminary and has limited support.
+aoc: Selected target board package /apps/USE/easybuild/staging/2023.1/software/520nmx/20.4
+aoc: Selected target board p520_hpc_m210h_g3x16
+aoc: Running OpenCL parser....
+Couldn't open /home/users/u101373/CG-FPGA/opencl/bin/fpga/fblas_kernels.fpga.aoco: No such file or directory
+Error: Can't save value into package file: 'pkg_editor /home/users/u101373/CG-FPGA/opencl/bin/fpga/fblas_kernels.fpga.13961.temp/value.txt set .acl.board /home/users/u101373/CG-FPGA/opencl/bin/fpga/fblas_kernels.fpga.13961.temp/value.txt' failed
+
+
+real	0m46.192s
+user	0m0.835s
+sys	0m1.767s

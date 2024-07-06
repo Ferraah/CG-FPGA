@@ -5,24 +5,54 @@
 #include "utils.hpp"
 // oneAPI headers
 
-class Device {
+class PipesDeviceHandler {
     public:
-        Device(cl::Context &_context, cl::CommandQueue &_queue, cl::Program &_program) : 
+        PipesDeviceHandler(cl::Device &_device, cl::Context &_context, cl::CommandQueue &_queue, cl::Program &_program, cl::Program &_fblas_program) : 
+            device(_device),
             context(_context),
             queue(_queue),
-            program(_program){};
+            program(_program),
+            fblas_program(_fblas_program)
+            {};
 
-        void dot(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t size, cl::Event &event);
-        void vec_sum(double alpha, const cl::Buffer &bufX, double beta, const cl::Buffer &bufY, size_t size, cl::Event &event);
+        void dot(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t size, std::vector<cl::Event> &events);
+        void vec_sum(double alpha, const cl::Buffer &bufa, double beta, const cl::Buffer &bufB, size_t size, cl::Event &event);
         void matrix_vector_mul(const cl::Buffer &bufA, const cl::Buffer &dB, const cl::Buffer &bufC, size_t size, cl::Event &event);
 
     private:
+        cl::Device device;
         cl::Context context;
         cl::CommandQueue queue;
         cl::Program program;
+        cl::Program fblas_program;
         
 
 };
+
+class DirectDeviceHandler {
+    public:
+        DirectDeviceHandler(cl::Device &_device, cl::Context &_context, cl::CommandQueue &_queue, cl::Program &_program, cl::Program &_fblas_program) : 
+            device(_device),
+            context(_context),
+            queue(_queue),
+            program(_program),
+            fblas_program(_fblas_program)
+            {};
+
+        void dot(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t size, std::vector<cl::Event> &events);
+        void vec_sum(double alpha, const cl::Buffer &bufa, double beta, const cl::Buffer &bufB, size_t size, cl::Event &event);
+        void matrix_vector_mul(const cl::Buffer &bufA, const cl::Buffer &dB, const cl::Buffer &bufC, size_t size, cl::Event &event);
+
+    private:
+        cl::Device device;
+        cl::Context context;
+        cl::CommandQueue queue;
+        cl::Program program;
+        cl::Program fblas_program;
+        
+
+};
+
 
 
 #endif

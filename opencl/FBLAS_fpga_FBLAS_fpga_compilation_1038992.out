@@ -1,0 +1,27 @@
+
+Lmod is automatically replacing "env/release/2023.1" with "env/staging/2023.1".
+
+Warning: -fp-relaxed will override all instances of #pragma clang fp reassoc
+aoc: Selected target board package /apps/USE/easybuild/staging/2023.1/software/520nmx/20.4
+aoc: Selected target board p520_hpc_m210h_g3x16
+aoc: Running OpenCL parser....
+aoc: OpenCL parser completed 
+aoc: Linking Object files....
+aoc: Optimizing and doing static analysis of code...
+src/FBGABlas_kernels/fblas_kernels.cl:364: Compiler Warning: Cannot unroll loop in function 'kernel_read_vector_y_1' because endpoints of channel 'channel_in_vector_y_1' would undergo different amounts of unrolling
+src/FBGABlas_kernels/fblas_kernels.cl:557: Compiler Warning: Cannot unroll loop in function 'kernel_write_vector_1' because endpoints of channel 'channel_out_vector_1' would undergo different amounts of unrolling
+src/FBGABlas_kernels/fblas_kernels.cl:348: Compiler Warning: Loop Coalescing requested but cannot be done in kernel 'kernel_read_vector_y_1':
+src/FBGABlas_kernels/fblas_kernels.cl:364: Compiler Warning:  Inner loop failed to coalesce to parent because of complex loop variable initializer
+Compiler Warning: src/FBGABlas_kernels/fblas_kernels.cl:24: Stream 'channel_in_vector_x_0' is never used. Note that the compiler will optimize it away.
+Compiler Warning: src/FBGABlas_kernels/fblas_kernels.cl:25: Stream 'channel_in_vector_y_0' is never used. Note that the compiler will optimize it away.
+Compiler Warning: src/FBGABlas_kernels/fblas_kernels.cl:33: Stream 'channel_in_vector_x_2' is never used. Note that the compiler will optimize it away.
+Compiler Warning: src/FBGABlas_kernels/fblas_kernels.cl:34: Stream 'channel_in_vector_y_2' is never used. Note that the compiler will optimize it away.
+Compiler Warning: src/FBGABlas_kernels/fblas_kernels.cl:35: Stream 'channel_out_vector_2' is never used. Note that the compiler will optimize it away.
+Compiler Warning: src/FBGABlas_kernels/fblas_kernels.cl:28: Stream 'channel_in_vector_x_1' is never used. Note that the compiler will optimize it away.
+Compiler Warning: src/FBGABlas_kernels/fblas_kernels.cl:30: Stream 'channel_in_matrix_A_1' is never used. Note that the compiler will optimize it away.
+aoc: First stage compilation completed successfully.
+aoc: Compiling for FPGA. This process may take several hours to complete.  Prior to performing this compile, be sure to check the reports to ensure the design will meet your performance targets.  If the reports indicate performance targets are not being met, code edits may be required.  Please refer to the Intel FPGA SDK for OpenCL Best Practices Guide for information on performance tuning applications for FPGAs.
+
+real	444m52.751s
+user	2075m39.989s
+sys	168m14.347s

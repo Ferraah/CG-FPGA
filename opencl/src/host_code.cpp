@@ -1,11 +1,27 @@
 #include "host_code.hpp"
+#include <chrono>
+
+//#include "CL/cl_ext.h"
+
+#define CL_CHANNEL_1_INTELFPGA              (1<<16)
+#define CL_CHANNEL_2_INTELFPGA              (2<<16)
+#define CL_CHANNEL_3_INTELFPGA              (3<<16)
+#define CL_CHANNEL_4_INTELFPGA              (4<<16)
+#define CL_CHANNEL_5_INTELFPGA              (5<<16)
+#define CL_CHANNEL_6_INTELFPGA              (6<<16)
+#define CL_CHANNEL_7_INTELFPGA              (7<<16)
+
+//#define EMULATOR
+#ifdef EMULATOR
+#define PLATFORM_ID 0
+#else
+#define PLATFORM_ID 2
+#endif
+
+void prepare(cl::Context &context, cl::CommandQueue &q, cl::Program &program, cl::Program &fblas_program){
 
 
-
-void prepare(cl::Context &context, cl::CommandQueue &q, cl::Program &program){
-
-
-    cl_int err;
+    cl_int err = CL_SUCCESS;
     cl::Platform platform;
     std::vector<cl::Platform> all_platforms;
     std::vector<cl::Device> platform_devices;
@@ -13,7 +29,8 @@ void prepare(cl::Context &context, cl::CommandQueue &q, cl::Program &program){
     //platform = cl::Platform::get(&err); 
 
     cl::Platform::get(&all_platforms);
-    all_platforms[1].getDevices(CL_DEVICE_TYPE_ALL, &platform_devices);
+
+    all_platforms[PLATFORM_ID].getDevices(CL_DEVICE_TYPE_ALL, &platform_devices);
 
     CHECK_ERR(err, "Failed to get platform ID");
     device = cl::Device::getDefault(&err);
@@ -29,8 +46,13 @@ void prepare(cl::Context &context, cl::CommandQueue &q, cl::Program &program){
 
     CHECK_ERR(err, "Failed to create command queue");
 
-    //utils::build_source("src/kernels/kernels.cl", program , context);
-    utils::load_binaries("/home/users/u101373/CG-FPGA/opencl/bin/fpga/kernels.fpga.acox.aocx", program , context, device);
+#ifdef EMULATOR
+    utils::build_source("/home/users/u101373/CG-FPGA/opencl/src/FBGABlas_kernels/fblas_kernels_direct.cl", fblas_program, context, device);
+
+    //utils::build_source("src/kernels/kernels.cl", program , context, device);
+#else
+    utils::load_binaries("/home/users/u101373/CG-FPGA/opencl/bin/fpga/fblas_kernels.fpga.aocx", fblas_program, context, device);
+#endif
     /*
     #if FPGA_SIMULATOR
     auto selector = sycl::ext::intel::fpga_simulator_selector_v;
@@ -53,12 +75,14 @@ void prepare(cl::Context &context, cl::CommandQueue &q, cl::Program &program){
     */
 }
 
-void conjugate_gradient(cl::Context &context, cl::CommandQueue &q, cl::Program &program, const double *A, const double *b, double *x, size_t size, int max_iters, double rel_error) 
+void conjugate_gradient(cl::Device &dev, cl::Context &context, cl::CommandQueue &q, cl::Program &program, cl::Program &fblas_program, const double *A, const double *b, double *x, size_t size, int max_iters, double rel_error) 
 {
 
 
     double *r = new (std::align_val_t{ 64 }) double[size];
     double *d = new (std::align_val_t{ 64 }) double[size];
+
+    double *test = new (std::align_val_t{ 64 }) double[size];
 
     for(size_t i = 0; i < size; i++)
     {
@@ -70,65 +94,100 @@ void conjugate_gradient(cl::Context &context, cl::CommandQueue &q, cl::Program &
     cl_int err;
     cl::Event event1, event2;
 
-    Device device(context, q, program);
 
-    cl::Buffer d_A(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR | CL_MEM_HOST_NO_ACCESS, size*size*sizeof(double), (void*)A, &err);
-    cl::Buffer d_b(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR | CL_MEM_HOST_NO_ACCESS, size*sizeof(double), (void*)b, &err);
-    cl::Buffer d_x(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR | CL_MEM_HOST_READ_ONLY, size*sizeof(double), (void*)x, &err);
-    cl::Buffer d_d(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR | CL_MEM_HOST_NO_ACCESS, size*sizeof(double), (void*)d, &err);
-    cl::Buffer d_r(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR | CL_MEM_HOST_NO_ACCESS, size*sizeof(double), (void*)r, &err);
+    PipesDeviceHandler device(dev, context, q, program, fblas_program);
 
-    cl::Buffer d_Ad(context, CL_MEM_READ_WRITE, size*sizeof(double));
+    cl::Buffer d_A(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size*size*sizeof(double), (void*)A, &err);
+    cl::Buffer d_b(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,  size*sizeof(double), (void*)b, &err);
+    cl::Buffer d_x(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,  size*sizeof(double), (void*)x, &err);
+    cl::Buffer d_d(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size*sizeof(double), (void*)d, &err);
+    cl::Buffer d_r(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size*sizeof(double), (void*)r, &err);
+
+    cl::Buffer d_Ad(context,   CL_MEM_READ_WRITE, size*sizeof(double));
     cl::Buffer d_dot1(context, CL_MEM_WRITE_ONLY, 1*sizeof(double));
-    cl::Buffer d_dot2(context, CL_MEM_WRITE_ONLY, 1*sizeof(double));
+    cl::Buffer d_dot2(context, CL_MEM_WRITE_ONLY, 1*sizeof(double)); 
 
     CHECK_ERR(err, "Buffer allocation error. ");
 
-
+    std::vector<cl::Event> events;
     double alpha, beta;
     double rr, bb;
     double dot1, dot2;
 
-    device.dot(d_b, d_b, d_dot1, size, event1);
+    device.dot(d_b, d_b, d_dot1, size, events);
     q.enqueueReadBuffer(d_dot1, CL_TRUE, 0, sizeof(double), &rr);
-
+    
     bb = rr;
-
+    std::cout << "bb: " << bb <<std::endl;
     int num_iters;
+    
+    auto start = std::chrono::high_resolution_clock::now();
 
+    auto *t = new double[size];
     for(num_iters = 1; num_iters <= max_iters; num_iters++)
     {
 
-        device.matrix_vector_mul(d_A, d_d, d_Ad, size, event1);
-        event1.wait();
+        //std::cout << "Iteration " << num_iters << std::endl;
 
-        device.dot(d_d, d_r, d_dot1, size, event1);
-        device.dot(d_Ad, d_d, d_dot2, size, event2);
+        device.matrix_vector_mul(d_A, d_d, d_Ad, size, event1);
+        q.enqueueReadBuffer(d_Ad, CL_TRUE, 0, size*sizeof(double), t);
+// utils::print_matrix(t, 1, size);
+// std::cout << std::endl;
+//
+
+        device.dot(d_d, d_r, d_dot1, size, events);
+        device.dot(d_Ad, d_d, d_dot2, size, events);
         q.enqueueReadBuffer(d_dot1, CL_TRUE, 0, sizeof(double), &dot1);
         q.enqueueReadBuffer(d_dot2, CL_TRUE, 0, sizeof(double), &dot2);
-
+//        std::cout << "dot 1: " << dot1 << std::endl;
+//        std::cout << "dot 2: " << dot2 << std::endl;
         alpha = dot1 / dot2;
+       // std::cout << "alpha: " << alpha << std::endl;
+//        std::cout << "F alpha: "<< alpha << std::endl;
 
         device.vec_sum(alpha, d_d, 1.0, d_x, size, event1);
+//
+     //   q.enqueueReadBuffer(d_x, CL_TRUE, 0, size*sizeof(double), t);
+    //    utils::print_matrix(t, 1, size);
+ //       std::cout << std::endl;
+//
         device.vec_sum(-alpha, d_Ad, 1.0, d_r, size, event2);
-        event1.wait();
-        event2.wait();
-        
+//
+        q.enqueueReadBuffer(d_r, CL_TRUE, 0, size*sizeof(double), t);
+  //      utils::print_matrix(t, 1, size);
+   //     std::cout << std::endl;
+//
 
-        device.dot(d_Ad, d_r, d_dot1, size, event1);
-        device.dot(d_Ad, d_d, d_dot2, size, event2);
+
+        device.dot(d_Ad, d_r, d_dot1, size, events);
+        device.dot(d_Ad, d_d, d_dot2, size, events);
+
         q.enqueueReadBuffer(d_dot1, CL_TRUE, 0, sizeof(double), &dot1);
         q.enqueueReadBuffer(d_dot2, CL_TRUE, 0, sizeof(double), &dot2);
 
         beta = dot1 / dot2;
+//
+ //       std::cout << "dot 1: " << dot1 << std::endl;
+  //      std::cout << "dot 2: " << dot2 << std::endl;
+//
+        alpha = dot1 / dot2;
+   //     std::cout << "beta: " << beta<< std::endl;
+//        std::cout << "F alpha: "<< alpha << std::endl;
+
 
         device.vec_sum(1.0, d_r, -beta, d_d, size, event1);
-        event1.wait();
+//
+        q.enqueueReadBuffer(d_d, CL_TRUE, 0, size*sizeof(double), t);
+     //   utils::print_matrix(t, 1, size);
+      //  std::cout << std::endl;
+//
 
-        device.dot(d_r, d_r, d_dot1, size, event1);
+
+        device.dot(d_r, d_r, d_dot1, size, events);
         q.enqueueReadBuffer(d_dot1, CL_TRUE, 0, sizeof(double), &dot1);
         rr = dot1;
 
+      //  std::cout << "rr: " << rr<< std::endl;
         if(std::sqrt(rr / bb) < rel_error) { break; }
     }
 
@@ -145,6 +204,5 @@ void conjugate_gradient(cl::Context &context, cl::CommandQueue &q, cl::Program &
     {
         std::clog << "Did not converge in " << num_iters << " iterations, relative error is: " << std::sqrt(rr / bb) << std::endl;
     }
-
 }
 

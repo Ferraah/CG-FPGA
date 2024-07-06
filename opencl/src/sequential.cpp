@@ -1,5 +1,5 @@
 #include "sequential.hpp"
-
+#include "utils.hpp"
 
 void Sequential::run(const double * A , const double * b, double * x, size_t size, int max_iter, double res_error) {
     conjugate_gradient(A, b, x, size, max_iter, res_error);
@@ -67,17 +67,47 @@ void Sequential::conjugate_gradient(const double * A, const double * b, double *
     rr = bb;
     for(num_iters = 1; num_iters <= max_iters; num_iters++)
     {
+
+        //std::cout << "Iteration " << num_iters << std::endl;
+
         gemv(1.0, A, p, 0.0, Ap, size, size);
+//
+ //       utils::print_matrix(Ap, 1, size);
+  //      std::cout << std::endl;
+//
+
+
         alpha = rr / dot(p, Ap, size);
+//
+ //       std::cout << "alpha: " << alpha << std::endl;
+//
         axpby(alpha, p, 1.0, x, size);
+//
+ //       utils::print_matrix(x, 1, size);
+  //      std::cout << std::endl;
+//
         axpby(-alpha, Ap, 1.0, r, size);
+//
+ //       utils::print_matrix(r, 1, size);
+//       std::cout << std::endl;
+//
+
         rr_new = dot(r, r, size);
+//
+//        std::cout << "rr: " << rr_new << std::endl;
+//
         //std::clog << r[0] << std::endl;
         beta = rr_new / rr;
+//
+//        std::cout << "beta: " << beta << std::endl;
+//
         rr = rr_new;
-
         if(std::sqrt(rr / bb) < rel_error) { break; }
         axpby(1.0, r, beta, p, size);
+//
+//        utils::print_matrix(p, 1, size);
+//        std::cout << std::endl;
+//
     }
 
     delete[] r;

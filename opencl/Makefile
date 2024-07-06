@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX = icpx 
-CXXFLAGS = -O3 -Wall -Wextra -Iinclude -DINTEL_CL
+CXXFLAGS = -O3 -Wall -Wextra -Iinclude -DINTEL_CL -g
 
 AOCL_COMPILE_CONFIG := $(shell aocl compile-config)
 AOCL_LINK_CONFIG := $(shell aocl link-config)

@@ -1,23 +1,23 @@
 #include "utils.hpp"
+
 #define NUM_DEVICES 1
 
-void utils::build_source(const std::string& path, cl::Program &program, cl::Context &context) {
+void utils::build_source(const std::string& path, cl::Program &program, cl::Context &context, cl::Device &device) {
+
+    // Check if the file exists
+    if (!std::filesystem::exists(path)) {
+        std::cerr << "Error: File does not exist.\n";
+        exit(1);
+    }
 
     std::ifstream kernel_file(path);
 
     std::string src(std::istreambuf_iterator<char>(kernel_file), (std::istreambuf_iterator<char>()));
 
-    /**
-     * Compile kernel program which will run on the device.
-     * */
-
     //cl::Program::Sources sources(1, src);
     cl::Program::Sources sources;
     sources.push_back(std::make_pair(src.data(), src.size()));
 
-    //Warning 
-    cl::Device device = cl::Device::getDefault();
-    
     program = cl::Program(context, sources);
     auto err = program.build();
     if(err != CL_BUILD_SUCCESS){
@@ -25,20 +25,9 @@ void utils::build_source(const std::string& path, cl::Program &program, cl::Cont
         << "\nBuild Log:\t " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device) << std::endl;
         exit(1);
     }else{
-        std::clog << "Program built." << std::endl;
-    }
-    auto binaries = program.getInfo<CL_PROGRAM_BINARIES>(&err);
 
-     // Open the file in binary mode
-    std::ofstream file("binary_output", std::ios::binary);
-    if (!file.is_open()) {
-        throw std::runtime_error("Failed to open file: " + path);
-    }
-
-    // Write the contents of the vector to the file
-    file.write(reinterpret_cast<const char*>(binaries.data()), binaries.size());
-    if (!file) {
-        throw std::runtime_error("Failed to write to file: " + path);
+        std::clog<< "Program built.!\nBuild Status: " << program.getBuildInfo<CL_PROGRAM_BUILD_STATUS>(device) 
+        << "\nBuild Log:\t " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device) << std::endl;
     }
 }
 
