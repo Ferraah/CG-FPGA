@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 
 #include "host_code.hpp"
 #include "utils.hpp"
@@ -28,38 +29,30 @@ void full_test(std::string n_str){
     double *vector;
     double *x_fpga, *x_seq;
 
-    size_t n=10, m=10 ; 
+    size_t n=10, m=10; 
     int max_iter = 1000;
-    double res = 1.e-4;
+    double res = 1.e-9;
 
     utils::read_matrix_from_file(m_path , matrix, n, m);
     utils::read_vector_from_file(rhs_path, vector, n);
     //utils::create_matrix(matrix, n, m, 1);
     //utils::create_vector(vector, n, 1);
 
-    std::cout << n << std::endl;
+    // Initialize solutions
     x_fpga = new (std::align_val_t{64}) double[n];
     x_seq = new (std::align_val_t{64}) double[n];
     
-    dev = cl::Device::getDefault();
-
-    std::cout << std::endl;
+    // FPGA Strategy
     timer.start();
     conjugate_gradient(dev, context, q, program, fblas_program, matrix, vector, x_fpga, n, max_iter, res);
     timer.stop();
     timer.print_last_formatted();
 
-    std::cout << std::endl;
+    // Sequential strategy
     timer.start();
     sequential.conjugate_gradient(matrix, vector, x_seq, n, max_iter, res);
     timer.stop();
     timer.print_last_formatted();
-
-
-    //double norm_diff;
-    //EXPECT_TRUE(AreArraysEqual(x_seq, x_fpga, n, res, norm_diff)) << "Fail";
-    //AreArraysEqual(x_seq, x_fpga, n, res, norm_diff);
-    //std::cout << "Norm diff: " << norm_diff << std::endl;
 
     delete [] matrix;
     delete [] vector;
@@ -110,38 +103,32 @@ void find_opencl(){
     }
 }
 
-void gemv_test(int n) {
 
+
+
+void gemv_test(int n) {
     n = 4;
-    //double *A, *x;
     double A[16] = {-1,2,-3,4,0,3,1,2,4,5,1,6,1,2,3,4};
     double x[4] = {1, -2, 3, -4};
     double b_ref[4] = {-30, -11, -27, -10};
 
-    auto *b= new (std::align_val_t{64}) double[n];
-
-
-    //utils::create_matrix(A, n, n, 1);
-    //utils::create_vector(x, n, 1);
-
-    for(int c=0; c<n; c++){
-        //A[(n-1)*n + c] = 0;
-    }
+    auto *b = new (std::align_val_t{64}) double[n];
 
     cl_int err;
-    //cl::Buffer d_A(context, CL_CHANNEL_1_INTELFPGA | CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR , n*n*sizeof(double), (void*)A, &err);
-    //cl::Buffer d_x(context, CL_CHANNEL_2_INTELFPGA | CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, n*sizeof(double), (void*)x, &err);
-    //cl::Buffer d_b(context, CL_CHANNEL_3_INTELFPGA | CL_MEM_WRITE_ONLY, n*sizeof(double));
     cl::Buffer d_A(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR , n*n*sizeof(double), (void*)A, &err);
     cl::Buffer d_x(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, n*sizeof(double), (void*)x, &err);
     cl::Buffer d_b(context, CL_MEM_WRITE_ONLY, n*sizeof(double));
     CHECK_ERR(err, "err gemv test");
 
-    cl::Event event;
 
-    PipesDeviceHandler device(dev, context, q, program, fblas_program);
-    device.matrix_vector_mul(d_A, d_x, d_b, n, event);
+    auto start = std::chrono::high_resolution_clock::now();
+    DirectDeviceHandler device(dev, context, q, program, fblas_program);
+    device.matrix_vector_mul(d_A, d_x, d_b, n);
     q.enqueueReadBuffer(d_b, CL_TRUE, 0, n*sizeof(double), b);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    std::cout << "GEMV test time: " << elapsed.count() << " seconds\n";
+
     utils::print_matrix(b, 1, n);
     for (int i = 0; i < n; i++)
         if(b[i] != b_ref[i]){
@@ -149,90 +136,90 @@ void gemv_test(int n) {
             return;
         }
 
-    /*
-    std::cout << std::endl;
-    utils::print_matrix(A, n, n);
-    std::cout << std::endl;
-    utils::print_matrix(b, 1, n);
-    std::cout << std::endl;
-    //ASSERT_EQ(h_res[0], (double)n);
-*/
     std::clog << "gemv passed\n";
 
-    //delete[] A;
     delete[] b;
-    //delete[] x;
-
 }
 
 void gemv_full_test(int n) {
-
     double *A, *x;
 
-    auto *b= new (std::align_val_t{64}) double[n];
-
+    auto *b = new (std::align_val_t{64}) double[n];
+    auto *y = new (std::align_val_t{64}) double[n];
 
     utils::create_matrix(A, n, n, 1);
     utils::create_vector(x, n, 1);
 
     cl_int err;
-    //cl::Buffer d_A(context, CL_CHANNEL_1_INTELFPGA | CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR , n*n*sizeof(double), (void*)A, &err);
-    //cl::Buffer d_x(context, CL_CHANNEL_2_INTELFPGA | CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, n*sizeof(double), (void*)x, &err);
-    //cl::Buffer d_b(context, CL_CHANNEL_3_INTELFPGA | CL_MEM_WRITE_ONLY, n*sizeof(double));
     cl::Buffer d_A(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR , n*n*sizeof(double), (void*)A, &err);
     cl::Buffer d_x(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, n*sizeof(double), (void*)x, &err);
     cl::Buffer d_b(context, CL_MEM_WRITE_ONLY, n*sizeof(double));
     CHECK_ERR(err, "err gemv test");
 
-    cl::Event event;
 
-    PipesDeviceHandler device(dev, context, q, program, fblas_program);
-    device.matrix_vector_mul(d_A, d_x, d_b, n, event);
-    q.enqueueReadBuffer(d_b, CL_TRUE, 0, n*sizeof(double), b);
-    //utils::print_matrix(b, 1, n);
+    auto start = std::chrono::high_resolution_clock::now();
+    DirectDeviceHandler device(dev, context, q, program, fblas_program);
+    device.matrix_vector_mul(d_A, d_x, d_b, n);
+    //q.enqueueReadBuffer(d_b, CL_TRUE, 0, n*sizeof(double), b);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed1 = end - start;
+    std::cout << "Full GEMV test time: " << elapsed1.count() << " seconds\n";
+
+    start = std::chrono::high_resolution_clock::now();
+    sequential.gemv(1.0, A, x, 0.0, y, n, n);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed2 = end - start;
+    std::cout << "SEQ VecSum test time: " << elapsed2.count() << " seconds\n";
+
+
+    double sd = (elapsed1.count()/elapsed2.count()); 
+    std::cout << "Speed-down: " << sd  << std::endl; 
+
+ 
     for (int i = 0; i < n; i++)
         if(b[i] != n){
             std::cerr << "full gemv not passed\n";
             return;
         }
 
-    /*
-    std::cout << std::endl;
-    utils::print_matrix(A, n, n);
-    std::cout << std::endl;
-    utils::print_matrix(b, 1, n);
-    std::cout << std::endl;
-    //ASSERT_EQ(h_res[0], (double)n);
-*/
     std::clog << "full gemv passed\n";
 
-    //delete[] A;
     delete[] b;
-    //delete[] x;
-
 }
 
 void vecsum_test(int n) {
-
-    auto *a= new (std::align_val_t{64}) double[n];
-
-    auto *c= new (std::align_val_t{64}) double[n];
+    auto *a = new (std::align_val_t{64}) double[n];
+    auto *c = new (std::align_val_t{64}) double[n];
+    auto *d = new (std::align_val_t{64}) double[n];
 
     for (int i = 0; i < n; i++)
-        a[i] = 1.0;
+        a[i] = d[i] = i;
 
     cl_int err;
     cl::Buffer d_a(context, CL_CHANNEL_1_INTELFPGA | CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, n*sizeof(double), (void*)a, &err);
     cl::Buffer d_b(context, CL_CHANNEL_2_INTELFPGA | CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, n*sizeof(double), (void*)a, &err);
     CHECK_ERR(err, "err vecsum test");
 
-    cl::Event event;
+    auto start = std::chrono::high_resolution_clock::now();
+    DirectDeviceHandler device(dev, context, q, program, fblas_program);
+    device.vec_sum(1.0, d_a, 2.0, d_b, n);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed1 = end - start;
+    std::cout << "FPG VecSum test time: " << elapsed1.count() << " seconds\n";
 
-    PipesDeviceHandler device(dev, context, q, program, fblas_program);
-    device.vec_sum(1.0, d_a, 1.0, d_b, n, event);
+    start = std::chrono::high_resolution_clock::now();
+    sequential.axpby(1.0, a, 1.0, d, n);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed2 = end - start;
+    std::cout << "SEQ VecSum test time: " << elapsed2.count() << " seconds\n";
+
+
     q.enqueueReadBuffer(d_b, CL_TRUE, 0, n*sizeof(double), c);
+    double sd = (elapsed1.count()/elapsed2.count()); 
+    std::cout << "Speed-down: " << sd  << std::endl; 
+
     for (int i = 0; i < n; i++)
-        if(c[i] != 2.0){
+        if(c[i] != 3*i){
             std::cerr << "vec sum not passed\n";
             return;
         }
@@ -241,16 +228,11 @@ void vecsum_test(int n) {
 
     delete[] a;
     delete[] c;
-
 }
 
-
-
 void dot_test(int n) {
-
-    auto *a= new (std::align_val_t{64}) double[n];
-
-    auto *c= new (std::align_val_t{64}) double[1];
+    auto *a = new (std::align_val_t{64}) double[n];
+    auto *c = new (std::align_val_t{64}) double[1];
 
     for (int i = 0; i < n; i++)
         a[i] = 1.0;
@@ -261,48 +243,46 @@ void dot_test(int n) {
     cl::Buffer d_c(context, CL_CHANNEL_1_INTELFPGA | CL_MEM_WRITE_ONLY, sizeof(double));
     CHECK_ERR(err, "err dot test");
 
+    auto start = std::chrono::high_resolution_clock::now();
+    DirectDeviceHandler device(dev, context, q, program, fblas_program);
+    device.dot(d_a, d_b, d_c, n);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed1 = end - start;
+    std::cout << "FPG Dot test time: " << elapsed1.count() << " seconds\n";
 
-    std::vector<cl::Event> events;
+    start = std::chrono::high_resolution_clock::now();
+    sequential.dot(a, a, n);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed2 = end - start;
+    std::cout << "SEQ Dot test time: " << elapsed2.count() << " seconds\n";
 
-    PipesDeviceHandler device(dev, context, q, program, fblas_program);
-    device.dot(d_a, d_b, d_c, n, events);
+    double sd = (elapsed1.count()/elapsed2.count()); 
+    std::cout << "Speed-down: " << sd  << std::endl; 
+
     q.enqueueReadBuffer(d_c, CL_TRUE, 0, sizeof(double), c);
     if(c[0] != n)
         std::cerr << "Dot test not passed\n";
     else
         std::clog << "Dot test passed\n";
 
-    //ASSERT_EQ(h_res[0], (double)n);
-
-
     delete[] a;
     delete[] c;
-
 }
+
 
 int main(int argc, char* argv[]) {
 
-    
 	if(argc < 2){
 		std::cerr << "Usage: " << argv[0] << "n1 n2 .. ni" << std::endl;
 		return 1;
 	}
+
 	std::vector<std::string> n_str(argv + 1, argv + argc);
-
     prepare();
-     int n = 512;
-
-    //gemv_full_test(n);
-    dot_test(n);
-    vecsum_test(n);
-  //  gemv_test(n);
-  //  
-  //  dot_test(2*n);
-  //  vecsum_test(2*n);
-  //  gemv_test(2*n);
-    //find_opencl();
+    int n = std::stoi(n_str[0]);
 	for(const auto& n: n_str){
-//		full_test(n);
+		full_test(n);
+        int i = std::stoi(n);
 	}
 	return 0;
 }

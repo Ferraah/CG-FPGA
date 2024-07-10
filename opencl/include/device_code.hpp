@@ -15,9 +15,9 @@ class PipesDeviceHandler {
             fblas_program(_fblas_program)
             {};
 
-        void dot(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t size, std::vector<cl::Event> &events);
-        void vec_sum(double alpha, const cl::Buffer &bufa, double beta, const cl::Buffer &bufB, size_t size, cl::Event &event);
-        void matrix_vector_mul(const cl::Buffer &bufA, const cl::Buffer &dB, const cl::Buffer &bufC, size_t size, cl::Event &event);
+        void dot(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t size);
+        void vec_sum(double alpha, const cl::Buffer &bufa, double beta, const cl::Buffer &bufB, size_t size);
+        void matrix_vector_mul(const cl::Buffer &bufA, const cl::Buffer &dB, const cl::Buffer &bufC, size_t size);
 
     private:
         cl::Device device;
@@ -39,9 +39,9 @@ class DirectDeviceHandler {
             fblas_program(_fblas_program)
             {};
 
-        void dot(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t size, std::vector<cl::Event> &events);
-        void vec_sum(double alpha, const cl::Buffer &bufa, double beta, const cl::Buffer &bufB, size_t size, cl::Event &event);
-        void matrix_vector_mul(const cl::Buffer &bufA, const cl::Buffer &dB, const cl::Buffer &bufC, size_t size, cl::Event &event);
+        void dot(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t size);
+        void vec_sum(double alpha, const cl::Buffer &bufa, double beta, const cl::Buffer &bufB, size_t size);
+        void matrix_vector_mul(const cl::Buffer &bufA, const cl::Buffer &dB, const cl::Buffer &bufC, size_t size);
 
     private:
         cl::Device device;
