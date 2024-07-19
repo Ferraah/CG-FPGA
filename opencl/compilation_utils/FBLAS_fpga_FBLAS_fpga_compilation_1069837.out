@@ -1,0 +1,24 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) env/release/2023.1   2) lxp-tools/myquota/0.3.2
+
+Lmod is automatically replacing "env/release/2023.1" with "env/staging/2023.1".
+
+
+The following have been reloaded with a version change:
+  1) binutils/2.40 => binutils/2.40-GCCcore-12.3.0
+
+Warning: -fp-relaxed will override all instances of #pragma clang fp reassoc
+aoc: Selected target board package /apps/USE/easybuild/staging/2023.1/software/520nmx/20.4
+aoc: Selected target board p520_hpc_m210h_g3x16
+aoc: Running OpenCL parser....
+aoc: OpenCL parser completed 
+aoc: Linking Object files....
+aoc: Optimizing and doing static analysis of code...
+aoc: First stage compilation completed successfully.
+aoc: Compiling for FPGA. This process may take several hours to complete.  Prior to performing this compile, be sure to check the reports to ensure the design will meet your performance targets.  If the reports indicate performance targets are not being met, code edits may be required.  Please refer to the Intel FPGA SDK for OpenCL Best Practices Guide for information on performance tuning applications for FPGAs.
+
+real	582m36.159s
+user	3017m56.414s
+sys	239m18.853s

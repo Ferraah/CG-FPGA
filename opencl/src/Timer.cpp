@@ -19,13 +19,13 @@ void Timer::reset(){
 void Timer::print_last_formatted() const {
     double time = Timer::get_last() ;
         if(time < 1e-6){
-            std::clog << time*1e9 << " ns";
+            std::cout << time*1e9 << " ns";
         }else if(time < 1e-3){
-            std::clog << time*1e6 << " us";
+            std::cout << time*1e6 << " us";
         }else if(time < 1){
-            std::clog << time*1e3 << " ms";
+            std::cout << time*1e3 << " ms";
         }else{
-            std::clog << time << " s";
+            std::cout << time << " s";
         }
 }
 
@@ -47,24 +47,24 @@ std::string Timer::get_last_formatted() const {
 
 void Timer::print(std::string title) const{
     if(title.empty()) 
-        std::clog << "\n---- Timings ----" << std::endl;
+        std::cout << "\n---- Timings ----" << std::endl;
     else
-        std::clog << "\n----" << title << "----" << std::endl;
+        std::cout << "\n----" << title << "----" << std::endl;
 
     for(size_t i = 0; i < _durations.size(); ++i){
         
         double time = _durations[i].count();
         if(time < 1e-6){
-            std::clog << i+1 << ": " << time*1e9 << " ns" << std::endl;
+            std::cout << i+1 << ": " << time*1e9 << " ns" << std::endl;
         }else if(time < 1e-3){
-            std::clog << i+1 << ": " << time*1e6 << " us" << std::endl;
+            std::cout << i+1 << ": " << time*1e6 << " us" << std::endl;
         }else if(time < 1){
-            std::clog << i+1 << ": " << time*1e3 << " ms" << std::endl;
+            std::cout << i+1 << ": " << time*1e3 << " ms" << std::endl;
         }else{
-            std::clog << i+1 << ": " << time << " s" << std::endl;
+            std::cout << i+1 << ": " << time << " s" << std::endl;
         }
     }
-    std::clog << "-----------------\n" << std::endl;
+    std::cout << "-----------------\n" << std::endl;
 }
 
 double Timer::get_last() const{

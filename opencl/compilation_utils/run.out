@@ -1,0 +1,75 @@
+
+Lmod is automatically replacing "env/release/2023.1" with "env/staging/2023.1".
+
+
+The following have been reloaded with a version change:
+  1) ncurses/6.4-GCCcore-12.3.0 => ncurses/5.9
+
+mpicxx -O3 -Wall -Wextra -Iinclude -DINTEL_CL -g -I/mnt/tier2/apps/USE/easybuild/staging/2023.1/software/intel-compilers/2023.1.0/compiler/2023.1.0/linux/lib/oclfpga/host/include  -c src/main.cpp -o build/main.o
+In file included from include/device_code.hpp:4,
+                 from include/host_code.hpp:12,
+                 from src/main.cpp:5:
+include/CL/cl.hpp:438:112: note: ‘#pragma message: opencl.hpp: CL_HPP_TARGET_OPENCL_VERSION is not defined. It will default to 300 (OpenCL 3.0)’
+  438 | # pragma message("opencl.hpp: CL_HPP_TARGET_OPENCL_VERSION is not defined. It will default to 300 (OpenCL 3.0)")
+      |                                                                                                                ^
+src/main.cpp: In function ‘void full_test(std::string, int, int)’:
+src/main.cpp:40:12: warning: unused variable ‘timeFpga’ [-Wunused-variable]
+   40 |     double timeFpga, timeSeq;
+      |            ^~~~~~~~
+src/main.cpp:40:22: warning: unused variable ‘timeSeq’ [-Wunused-variable]
+   40 |     double timeFpga, timeSeq;
+      |                      ^~~~~~~
+src/main.cpp:19:39: warning: unused parameter ‘rank’ [-Wunused-parameter]
+   19 | void full_test(std::string n_str, int rank, int size){
+      |                                   ~~~~^~~~
+src/main.cpp:19:49: warning: unused parameter ‘size’ [-Wunused-parameter]
+   19 | void full_test(std::string n_str, int rank, int size){
+      |                                             ~~~~^~~~
+mpicxx -O3 -Wall -Wextra -Iinclude -DINTEL_CL -g -L/mnt/tier2/apps/USE/easybuild/staging/2023.1/software/intel-compilers/2023.1.0/compiler/2023.1.0/linux/lib/oclfpga/host/linux64/lib -lOpenCL -o cg_opencl build/utils.o build/Timer.o build/sequential.o build/host_code.o build/device_code_direct.o build/main.o build/device_code.o
+
+
+Using device: p520_hpc_m210h_g3x16 : BittWare Stratix 10 MX OpenCL platform (aclbitt_s10mx_pcie0)
+Using device: p520_hpc_m210h_g3x16 : BittWare Stratix 10 MX OpenCL platform (aclbitt_s10mx_pcie1)
+Prepare OpenCL time:	
+19.937 sN: 1000
+Prepare OpenCL time:	
+19.9532 sN: 1000
+0.210433
+N: 2000
+0.211972
+N: 2000
+0.929521
+N: 3000
+2.09783
+N: 4000
+Did not converge in1001, relative error is: nan
+3.83601
+N: 3000
+2.06968
+N: 4000
+3.88354
+N: 5000
+6.02443
+N: 6000
+Did not converge in1001, relative error is: nan
+15.5903
+N: 5000
+5.91986
+N: 6000
+8.73255
+N: 7000
+11.8442
+N: 8000
+15.4579
+N: 9000
+Cannot open output file
+Cannot open output file
+Did not converge in1001, relative error is: nan
+free(): invalid pointer
+0.000169871
+
+MMD FATAL: acl_pcie.cpp:179: can't find handle 1 -- aborting
+cg_opencl: acl_pcie.cpp:179: static std::map<int, std::pair<const std::basic_string<char>, ACL_PCIE_DEVICE*> >::iterator DeviceMapManager::get_device_it_for_handle(int): Assertion `0' failed.
+srun: error: mel3001: task 0: Terminated
+srun: error: mel3001: task 1: Exited with exit code 1
+srun: Force Terminated StepId=1070005.0

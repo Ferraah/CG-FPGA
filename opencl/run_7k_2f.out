@@ -1,0 +1,50 @@
+
+The following have been reloaded with a version change:
+  1) ncurses/5.9 => ncurses/6.4-GCCcore-12.3.0
+
+mpicxx -O3 -Wall -Wextra -Iinclude -DINTEL_CL -g -I/mnt/tier2/apps/USE/easybuild/staging/2023.1/software/intel-compilers/2023.1.0/compiler/2023.1.0/linux/lib/oclfpga/host/include  -c src/main.cpp -o build/main.o
+In file included from include/device_code.hpp:4,
+                 from include/host_code.hpp:12,
+                 from src/main.cpp:6:
+include/CL/cl.hpp:438:112: note: ‘#pragma message: opencl.hpp: CL_HPP_TARGET_OPENCL_VERSION is not defined. It will default to 300 (OpenCL 3.0)’
+  438 | # pragma message("opencl.hpp: CL_HPP_TARGET_OPENCL_VERSION is not defined. It will default to 300 (OpenCL 3.0)")
+      |                                                                                                                ^
+mpicxx -O3 -Wall -Wextra -Iinclude -DINTEL_CL -g -L/mnt/tier2/apps/USE/easybuild/staging/2023.1/software/intel-compilers/2023.1.0/compiler/2023.1.0/linux/lib/oclfpga/host/linux64/lib -lOpenCL -o cg_opencl build/utils.o build/Timer.o build/sequential.o build/host_code.o build/device_code_direct.o build/main.o build/device_code.o
+
+
+Using device: p520_hpc_m210h_g3x16 : BittWare Stratix 10 MX OpenCL platform (aclbitt_s10mx_pcie1)
+Using device: p520_hpc_m210h_g3x16 : BittWare Stratix 10 MX OpenCL platform (aclbitt_s10mx_pcie0)
+Prepare OpenCL time:	
+Prepare OpenCL time:	
+20.5457 sN: 7071
+5.7236
+5.80922
+5.70771
+5.72241
+5.69825
+5.7427
+5.73455
+5.7187
+5.72679
+5.71319
+5.70844
+5.71657
+5.71923
+5.71387
+5.73482
+5.80007
+5.74424
+5.6998
+5.72858
+5.72407
+5.72167
+5.72328
+5.72272
+5.71334
+5.72178
+5.71505
+5.73115
+5.71471
+5.74425
+5.71391
+20.5395 s

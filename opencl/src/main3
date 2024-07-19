@@ -1,0 +1,299 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <mpi.h>
+
+#include "host_code.hpp"
+#include "utils.hpp"
+#include "Timer.hpp"
+#include "sequential.hpp"
+#include "device_code.hpp"
+
+cl::Context context;
+cl::CommandQueue q;
+cl::Program program;
+
+Timer timer;
+Sequential sequential;
+
+
+void prepare(int rank){
+    std::cout << std::endl;
+    timer.start();
+    //prepare(context, q, program);
+    prepare(context, q, program, rank);
+    timer.stop();
+    std::clog<< "Prepare OpenCL time:\t";
+    timer.print_last_formatted();
+    std::clog<< "\n";
+}
+
+void gemv_test(int n) {
+    n = 4;
+    double A[16] = {-1,2,-3,4,0,3,1,2,4,5,1,6,1,2,3,4};
+    double x[4] = {1, -2, 3, -4};
+    double b_ref[4] = {-30, -11, -27, -10};
+
+    auto *b = new (std::align_val_t{64}) double[n];
+
+    cl_int err;
+    cl::Buffer d_A(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR , n*n*sizeof(double), (void*)A, &err);
+    cl::Buffer d_x(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, n*sizeof(double), (void*)x, &err);
+    cl::Buffer d_b(context, CL_MEM_WRITE_ONLY, n*sizeof(double));
+    CHECK_ERR(err, "err gemv test");
+
+
+    auto start = std::chrono::high_resolution_clock::now();
+    DirectDeviceHandler device(context, q, program);
+    device.matrix_vector_mul(d_A, d_x, d_b, n, n);
+    q.enqueueReadBuffer(d_b, CL_TRUE, 0, n*sizeof(double), b);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    std::cout << "GEMV test time: " << elapsed.count() << " seconds\n";
+
+    utils::print_matrix(b, 1, n);
+    for (int i = 0; i < n; i++)
+        if(b[i] != b_ref[i]){
+            std::cerr << "gemv not passed\n";
+            return;
+        }
+
+    std::clog << "gemv passed\n";
+
+    delete[] b;
+}
+
+void mpi_gemv_full_test(int n, size_t rank, size_t size) {
+
+    double *A, *x;
+
+    // M = N columns
+    int m = n;
+
+    // Split the matrix into size parts to each process
+    size_t process_rows = n / size;
+
+    // Offset indicating the starting point of the process submatrix in A
+    size_t starting_offset = process_rows*m*rank;
+    if(rank == size - 1)
+    {
+        // If it's the last process, it gets also the remaining rows
+        process_rows += n % size;
+    }
+
+    // Full result
+    auto *full_b = new (std::align_val_t{64}) double[n];
+
+    // Process result
+    auto *b = new (std::align_val_t{64}) double[process_rows];
+
+    // Create the matrix ( every process does it but it's equal and it's ok for testing )
+    utils::create_matrix(A, n, m, 1);
+    utils::create_vector(x, n, 1);
+
+    cl_int err;
+
+
+    // Allocate device memory adeguately, and copy the data accordingly
+    cl::Buffer d_A(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR , process_rows*m*sizeof(double), (void*)(A + starting_offset), &err);
+    cl::Buffer d_x(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, n*sizeof(double), (void*)x, &err);
+    cl::Buffer d_b(context, CL_MEM_WRITE_ONLY, m*sizeof(double));
+    CHECK_ERR(err, "Error during MPI gemv test buffer allocation.");
+
+
+    auto start = std::chrono::high_resolution_clock::now();
+    DirectDeviceHandler device(context, q, program);
+
+    device.matrix_vector_mul(d_A, d_x, d_b, process_rows, m);
+    q.enqueueReadBuffer(d_b, CL_TRUE, 0, process_rows*sizeof(double), b);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed1 = end - start;
+
+    { 
+        // Prepare for gathering at the root
+        std::vector<int> recv_counts(size); // Number of elements received from each process
+        std::vector<int> displs(size);      // Displacements in the receive buffer
+
+        if(rank == 0){
+            for (int r = 0; r < size; ++r) {
+                recv_counts[r] = n / size;
+                if(r == size-1)
+                    recv_counts[r] += n % size;
+                displs[r] = (r == 0) ? 0 : displs[r-1] + recv_counts[r-1];
+            }
+        }
+
+        MPI_Gatherv(b, process_rows, MPI_DOUBLE, full_b, recv_counts.data(), displs.data(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    }
+
+    if(rank==0){
+        utils::print_matrix(full_b, 1, n);
+        utils::print_matrix(b, 1, process_rows);
+    }
+
+    for (int i = 0; i < n; i++)
+        if(full_b[i] != m){
+            std::cerr << "MPI full gemv not passed\n";
+            return;
+        }
+
+    std::clog << "MPI full gemv passed\n";
+
+    delete[] b;
+    delete[] A;
+    delete[] x;
+}
+
+
+void gemv_full_test(int n) {
+    double *A, *x;
+
+    int m = 2*n;
+    auto *b = new (std::align_val_t{64}) double[m];
+    auto *y = new (std::align_val_t{64}) double[n];
+
+    utils::create_matrix(A, n, m, 1);
+    utils::create_vector(x, m, 1);
+
+    cl_int err;
+    cl::Buffer d_A(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR , n*m*sizeof(double), (void*)A, &err);
+    cl::Buffer d_x(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, n*sizeof(double), (void*)x, &err);
+    cl::Buffer d_b(context, CL_MEM_WRITE_ONLY, m*sizeof(double));
+    CHECK_ERR(err, "err gemv test");
+
+
+    auto start = std::chrono::high_resolution_clock::now();
+    DirectDeviceHandler device(context, q, program);
+    device.matrix_vector_mul(d_A, d_x, d_b, n, m);
+    q.enqueueReadBuffer(d_b, CL_TRUE, 0, m*sizeof(double), b);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed1 = end - start;
+//    std::cout << "Full GEMV test time: " << elapsed1.count() << " seconds\n";
+
+    start = std::chrono::high_resolution_clock::now();
+    sequential.gemv(1.0, A, x, 0.0, y, n, m);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed2 = end - start;
+   // std::cout << "SEQ VecSum test time: " << elapsed2.count() << " seconds\n";
+
+
+    double sd = (elapsed1.count()/elapsed2.count()); 
+//    std::cout << "Speed-down: " << sd  << std::endl; 
+
+ 
+    for (int i = 0; i < n; i++)
+        if(b[i] != m){
+            std::cerr << "full gemv not passed\n";
+            return;
+        }
+
+    std::clog << "full gemv passed\n";
+
+    delete[] b;
+    delete[] A;
+    delete[] x;
+    delete[] y;
+}
+
+void vecsum_test(int n) {
+    auto *a = new (std::align_val_t{64}) double[n];
+    auto *c = new (std::align_val_t{64}) double[n];
+    auto *d = new (std::align_val_t{64}) double[n];
+
+    for (int i = 0; i < n; i++)
+        a[i] = d[i] = i;
+
+    cl_int err;
+    cl::Buffer d_a(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, n*sizeof(double), (void*)a, &err);
+    cl::Buffer d_b(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, n*sizeof(double), (void*)a, &err);
+    CHECK_ERR(err, "err vecsum test");
+
+    auto start = std::chrono::high_resolution_clock::now();
+    DirectDeviceHandler device(context, q, program);
+    device.vec_sum(1.0, d_a, 2.0, d_b, n);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed1 = end - start;
+    std::cout << "FPG VecSum test time: " << elapsed1.count() << " seconds\n";
+
+    start = std::chrono::high_resolution_clock::now();
+    sequential.axpby(1.0, a, 1.0, d, n);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed2 = end - start;
+    std::cout << "SEQ VecSum test time: " << elapsed2.count() << " seconds\n";
+
+
+    q.enqueueReadBuffer(d_b, CL_TRUE, 0, n*sizeof(double), c);
+    double sd = (elapsed1.count()/elapsed2.count()); 
+    std::cout << "Speed-down: " << sd  << std::endl; 
+
+    for (int i = 0; i < n; i++)
+        if(c[i] != 3*i){
+            std::cerr << "vec sum not passed\n";
+            return;
+        }
+    std::clog << "vec sum passed\n";
+
+    delete[] a;
+    delete[] c;
+}
+
+void dot_test(int n) {
+    auto *a = new (std::align_val_t{64}) double[n];
+    auto *c = new (std::align_val_t{64}) double[1];
+
+    for (int i = 0; i < n; i++)
+        a[i] = 1.0;
+
+    cl_int err;
+    cl::Buffer d_a(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR | CL_MEM_HOST_NO_ACCESS, n*sizeof(double), (void*)a, &err);
+    cl::Buffer d_b(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR | CL_MEM_HOST_READ_ONLY, n*sizeof(double), (void*)a, &err);
+    cl::Buffer d_c(context, CL_MEM_WRITE_ONLY, sizeof(double));
+    CHECK_ERR(err, "err dot test");
+
+    auto start = std::chrono::high_resolution_clock::now();
+    DirectDeviceHandler device(context, q, program);
+    device.dot(d_a, d_b, d_c, n);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed1 = end - start;
+    std::cout << "FPG Dot test time: " << elapsed1.count() << " seconds\n";
+
+    start = std::chrono::high_resolution_clock::now();
+    sequential.dot(a, a, n);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed2 = end - start;
+    std::cout << "SEQ Dot test time: " << elapsed2.count() << " seconds\n";
+
+    double sd = (elapsed1.count()/elapsed2.count()); 
+    std::cout << "Speed-down: " << sd  << std::endl; 
+
+    q.enqueueReadBuffer(d_c, CL_TRUE, 0, sizeof(double), c);
+    if(c[0] != n)
+        std::cerr << "Dot test not passed\n";
+    else
+        std::clog << "Dot test passed\n";
+
+    delete[] a;
+    delete[] c;
+}
+
+
+int main(int argc, char* argv[]) {
+    MPI_Init(&argc, &argv);
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    prepare(rank);
+    
+    int K = 1;
+    std::vector<std::string> n = {"6"};
+    for(auto &n_str : n ){
+        std::cout<< "N: " << n_str << std::endl;
+        for(int i=0; i<K; i++){
+            mpi_gemv_full_test(stoi(n_str), rank, size);
+        }
+    }
+
+    MPI_Finalize();
+	return 0;
+}

@@ -1,6 +1,10 @@
 # Compiler and flags
-CXX = icpx 
-CXXFLAGS = -O3 -Wall -Wextra -Iinclude -DINTEL_CL -g
+#CXX = icpx 
+#CXXFLAGS = -O3 -Wall -Wextra -Iinclude -DINTEL_CL -g
+
+# MPI Compiler and flags
+MPICC = mpicxx
+MPICXXFLAGS = -O3 -Wall -Wextra -Iinclude -DINTEL_CL -g
 
 AOCL_COMPILE_CONFIG := $(shell aocl compile-config)
 AOCL_LINK_CONFIG := $(shell aocl link-config)
@@ -22,11 +26,11 @@ all: $(TARGET)
 
 # Rule to link the executable
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(AOCL_LINK_CONFIG) -o $@ $^
+	$(MPICC) $(MPICXXFLAGS) $(AOCL_LINK_CONFIG) -o $@ $^
 
 # Rule to compile source files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS)  $(AOCL_COMPILE_CONFIG) -c $< -o $@
+	$(MPICC) $(MPICXXFLAGS) $(AOCL_COMPILE_CONFIG) -c $< -o $@
 
 # Create the build directory if it doesn't exist
 $(BUILD_DIR):

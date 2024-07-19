@@ -7,7 +7,8 @@
 __kernel void dgemv( __global const double*  restrict A, __global const double* restrict x, __global double* restrict y, const int row_streamed, const int N, const int M, const double alpha, const double beta) {
     __constant int TILE_N = 256;
     __constant int TILE_M = 256;
-    __constant int SHIFT_REG = 64;
+    //__constant int SHIFT_REG = 64;
+    __constant int SHIFT_REG = 128;
 
     int len_x, tile_x;
     int len_y, tile_y;

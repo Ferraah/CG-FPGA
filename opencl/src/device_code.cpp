@@ -6,10 +6,10 @@ void PipesDeviceHandler::dot(const cl::Buffer &bufA, const cl::Buffer &bufB, con
     cl_int err; 
     std::vector<cl::Kernel> kernels;
     std::vector<cl::CommandQueue> queues(4, std::move(cl::CommandQueue(context)));
-    kernels.push_back(cl::Kernel(fblas_program, "kernel_read_vector_x_0", &err));
-    kernels.push_back(cl::Kernel(fblas_program, "kernel_read_vector_y_0", &err));
-    kernels.push_back(cl::Kernel(fblas_program, "ddot", &err));
-    kernels.push_back(cl::Kernel(fblas_program, "kernel_write_scalar_0", &err));
+    kernels.push_back(cl::Kernel(program, "kernel_read_vector_x_0", &err));
+    kernels.push_back(cl::Kernel(program, "kernel_read_vector_y_0", &err));
+    kernels.push_back(cl::Kernel(program, "ddot", &err));
+    kernels.push_back(cl::Kernel(program, "kernel_write_scalar_0", &err));
     CHECK_ERR(err, "Error dot fblas kernel creation");
 
     
@@ -47,10 +47,10 @@ void PipesDeviceHandler::vec_sum(double alpha, const cl::Buffer &bufA, double be
     cl_int err; 
     std::vector<cl::Kernel> kernels;
     std::vector<cl::CommandQueue> queues(4, std::move(cl::CommandQueue(context)));
-    kernels.push_back(cl::Kernel(fblas_program, "kernel_read_vector_x_2", &err));
-    kernels.push_back(cl::Kernel(fblas_program, "kernel_read_vector_y_2", &err));
-    kernels.push_back(cl::Kernel(fblas_program, "daxpy", &err));
-    kernels.push_back(cl::Kernel(fblas_program, "kernel_write_vector_2", &err));
+    kernels.push_back(cl::Kernel(program, "kernel_read_vector_x_2", &err));
+    kernels.push_back(cl::Kernel(program, "kernel_read_vector_y_2", &err));
+    kernels.push_back(cl::Kernel(program, "daxpy", &err));
+    kernels.push_back(cl::Kernel(program, "kernel_write_vector_2", &err));
     CHECK_ERR(err, "Error dot fblas kernel creation");
 
 
@@ -93,11 +93,11 @@ void PipesDeviceHandler::matrix_vector_mul(const cl::Buffer &bufA, const cl::Buf
     cl_int err;
     std::vector<cl::Kernel> kernels;
     std::vector<cl::CommandQueue> queues(5, std::move(cl::CommandQueue(context)));
-    kernels.push_back(cl::Kernel(fblas_program, "kernel_read_matrix_A_1", &err));
-    kernels.push_back(cl::Kernel(fblas_program, "kernel_read_vector_x_1", &err));
-    kernels.push_back(cl::Kernel(fblas_program, "kernel_read_vector_y_1", &err));
-    kernels.push_back(cl::Kernel(fblas_program, "dgemv", &err));
-    kernels.push_back(cl::Kernel(fblas_program, "kernel_write_vector_1", &err));
+    kernels.push_back(cl::Kernel(program, "kernel_read_matrix_A_1", &err));
+    kernels.push_back(cl::Kernel(program, "kernel_read_vector_x_1", &err));
+    kernels.push_back(cl::Kernel(program, "kernel_read_vector_y_1", &err));
+    kernels.push_back(cl::Kernel(program, "dgemv", &err));
+    kernels.push_back(cl::Kernel(program, "kernel_write_vector_1", &err));
     CHECK_ERR(err, "Error gemv fblas kernel creation");
 
     

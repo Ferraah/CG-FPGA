@@ -1,0 +1,33 @@
+
+Lmod is automatically replacing "env/release/2023.1" with "env/staging/2023.1".
+
+
+The following have been reloaded with a version change:
+  1) ncurses/6.4-GCCcore-12.3.0 => ncurses/5.9
+
+mpicxx -O3 -Wall -Wextra -Iinclude -DINTEL_CL -g -I/mnt/tier2/apps/USE/easybuild/staging/2023.1/software/intel-compilers/2023.1.0/compiler/2023.1.0/linux/lib/oclfpga/host/include  -c src/main.cpp -o build/main.o
+In file included from include/device_code.hpp:4,
+                 from include/host_code.hpp:12,
+                 from src/main.cpp:5:
+include/CL/cl.hpp:438:112: note: ‘#pragma message: opencl.hpp: CL_HPP_TARGET_OPENCL_VERSION is not defined. It will default to 300 (OpenCL 3.0)’
+  438 | # pragma message("opencl.hpp: CL_HPP_TARGET_OPENCL_VERSION is not defined. It will default to 300 (OpenCL 3.0)")
+      |                                                                                                                ^
+src/main.cpp: In function ‘void full_test(std::string, int, int)’:
+src/main.cpp:40:12: warning: unused variable ‘timeFpga’ [-Wunused-variable]
+   40 |     double timeFpga, timeSeq;
+      |            ^~~~~~~~
+src/main.cpp:40:22: warning: unused variable ‘timeSeq’ [-Wunused-variable]
+   40 |     double timeFpga, timeSeq;
+      |                      ^~~~~~~
+src/main.cpp:42:16: warning: unused variable ‘seq’ [-Wunused-variable]
+   42 |     Sequential seq;
+      |                ^~~
+mpicxx -O3 -Wall -Wextra -Iinclude -DINTEL_CL -g -L/mnt/tier2/apps/USE/easybuild/staging/2023.1/software/intel-compilers/2023.1.0/compiler/2023.1.0/linux/lib/oclfpga/host/linux64/lib -lOpenCL -o cg_opencl build/utils.o build/Timer.o build/sequential.o build/host_code.o build/device_code_direct.o build/main.o build/device_code.o
+
+
+Using device: p520_hpc_m210h_g3x16 : BittWare Stratix 10 MX OpenCL platform (aclbitt_s10mx_pcie0)
+Using device: p520_hpc_m210h_g3x16 : BittWare Stratix 10 MX OpenCL platform (aclbitt_s10mx_pcie1)
+Prepare OpenCL time:	
+18.308 sN: 11313
+srun: error: mel3017: tasks 0-1: Terminated
+srun: Force Terminated StepId=1070724.0

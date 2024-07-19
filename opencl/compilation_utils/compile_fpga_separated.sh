@@ -20,9 +20,9 @@ module load 520nmx/20.4
 module load ifpgasdk/20.4
 module load GCC
 
-cd /home/users/u101373/CG-FPGA/opencl/src/fblas_separated
+cd /home/users/u101373/CG-FPGA/opencl/src/global_memory_kernels/
 # Create folders
 
 #Compile
-time aoc -board=p520_hpc_m210h_g3x16 -fp-relaxed -DINTEL_CL -report -reuse-exe=direct_gemv.aocx direct_ddot.cl direct_daxpy.cl direct_gemv.cl  
+time aoc -board=p520_hpc_m210h_g3x16 -fp-relaxed -DINTEL_CL -report direct_gemv.cl  
 
