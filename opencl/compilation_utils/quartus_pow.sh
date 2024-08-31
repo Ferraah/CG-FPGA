@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH --job-name=FBLAS_fpga_compilation
+#SBATCH --job-name=QuasrtusPowLog
 #SBATCH --account p200301
 #SBATCH --partition fpga
 #SBATCH --qos default
@@ -15,14 +15,10 @@
 
 #Load software environment
 module purge
-module load env/staging/2023.1
-module load 520nmx/20.4
-module load ifpgasdk/20.4
-module load GCC
+module load intel-fpga 
 
-cd /home/users/u101373/CG-FPGA/opencl/src/global_memory_kernels/
-# Create folders
+cd /home/users/u101373/CG-FPGA/opencl/bin/global_memory_kernels
 
 #Compile
-time aoc -board=p520_hpc_m210h_g3x16 -fp-relaxed -DINTEL_CL -report direct_ddot.cl direct_daxpy.cl direct_gemv.cl  
+time quartus_pow top
 

@@ -23,9 +23,11 @@ void prepare(int rank){
     // Rank % 2 is used to select the FPGA device between the two on each node
     prepare(context, q, program, rank % 2);
     timer.stop();
-    std::clog<< "Prepare OpenCL time:\t";
-    timer.print_last_formatted();
-    std::clog<< "\n";
+    if(rank == 0){
+        std::cout<< "Prepare OpenCL time:\t";
+        timer.print_last_formatted();
+        std::cout<< "\n";
+    }
 }
 
 void full_test(std::string n_str, int rank, int size) {
@@ -62,9 +64,13 @@ int main(int argc, char* argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     prepare(rank);
-    
-    int K = 30;
-    std::vector<std::string> n = {"5000"};
+    MPI_Barrier(MPI_COMM_WORLD);
+
+
+    std::vector<std::string> n (argv  + 1, argv + argc - 1);
+
+    int K = std::stoi(argv[argc-1]);
+
     for(auto &n_str : n ){
         if(rank == 0)
             std::cout<< "N: " << n_str << std::endl;

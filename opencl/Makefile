@@ -4,7 +4,7 @@
 
 # MPI Compiler and flags
 MPICC = mpicxx
-MPICXXFLAGS = -O3 -Wall -Wextra -Iinclude -DINTEL_CL -g
+MPICXXFLAGS = -O3 -Wall -Wextra -Iinclude -DINTEL_CL 
 
 AOCL_COMPILE_CONFIG := $(shell aocl compile-config)
 AOCL_LINK_CONFIG := $(shell aocl link-config)

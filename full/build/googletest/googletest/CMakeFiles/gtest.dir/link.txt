@@ -1,2 +1,0 @@
-/apps/USE/easybuild/staging/2023.1/software/binutils/2.40-GCCcore-12.3.0/bin/ar qc ../../lib/libgtest.a "CMakeFiles/gtest.dir/src/gtest-all.cc.o"
-/apps/USE/easybuild/staging/2023.1/software/binutils/2.40-GCCcore-12.3.0/bin/ranlib ../../lib/libgtest.a

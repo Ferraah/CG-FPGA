@@ -1,1 +1,0 @@
-icpx CMakeFiles/cg_test.dir/cg_test.cpp.o -o cg_test  -fsycl -fintelfpga -qactypes ../lib/libgtest.a ../lib/libgtest_main.a ../lib/libgtest.a -lpthread 

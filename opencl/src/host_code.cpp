@@ -25,7 +25,7 @@ void prepare(cl::Context &context, cl::CommandQueue &queue, cl::Program &program
 
     // Add the platform devices to the context
 
-    std::cout << "Using device: " << platform_devices[fpga_id].getInfo<CL_DEVICE_NAME>() << std::endl;
+    //std::cout << "Using device: " << platform_devices[fpga_id].getInfo<CL_DEVICE_NAME>() << "\n";
 
     // Create queue and program for each device
     queue = cl::CommandQueue(context, platform_devices[fpga_id], 0, &err);
@@ -65,7 +65,7 @@ void prepare(cl::Context &context, cl::CommandQueue &q,cl::Program &program){
     // @TODO: Make a unique file for emulation kernel
 //    utils::build_source("/home/users/u101373/CG-FPGA/opencl/src/FBGABlas_kernels/fblas_kernels_Direct.cl", program, context, device);
     //utils::build_source("src/kernels/kernels.cl", program , context, device);
-    utils::load_binaries("/home/users/u101373/CG-FPGA/opencl/bin/global_memory_kernels.aocx", program, context, device);
+    utils::load_binaries("/home/users/u101373/CG-FPGA/opencl/bin/global_memory_kernels/global_memory_kernels.aocx", program, context, device);
     //utils::load_binaries("/home/users/u101373/CG-FPGA/opencl/src/FBGABlas_kernels/dgemv.aocx", program, context, device);
 
 }
