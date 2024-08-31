@@ -1,7 +1,7 @@
-#include "device_code.hpp"
+#include "kernels_handler.hpp"
  
 
-void PipesDeviceHandler::dot(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t size) {
+void PipesKernelsHandler::dot(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t size) {
 
     cl_int err; 
     std::vector<cl::Kernel> kernels;
@@ -42,7 +42,7 @@ void PipesDeviceHandler::dot(const cl::Buffer &bufA, const cl::Buffer &bufB, con
     
 
 }
-void PipesDeviceHandler::vec_sum(double alpha, const cl::Buffer &bufA, double beta, const cl::Buffer &bufB, size_t size){
+void PipesKernelsHandler::vec_sum(double alpha, const cl::Buffer &bufA, double beta, const cl::Buffer &bufB, size_t size){
 
     cl_int err; 
     std::vector<cl::Kernel> kernels;
@@ -88,7 +88,7 @@ void PipesDeviceHandler::vec_sum(double alpha, const cl::Buffer &bufA, double be
    
 }
 
-void PipesDeviceHandler::matrix_vector_mul(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t size){
+void PipesKernelsHandler::matrix_vector_mul(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t size){
 
     cl_int err;
     std::vector<cl::Kernel> kernels;

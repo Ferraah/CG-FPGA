@@ -1,11 +1,7 @@
 #include "host_code.hpp"
-#include <chrono>
-#include "sequential.hpp"
-#include <mpi.h>
 
-
+// Platform ID of FPGA for meluxina
 #define PLATFORM_ID 2
-#define N_FPGA 2
 
 void prepare(cl::Context &context, cl::CommandQueue &queue, cl::Program &program, int fpga_id){
 
@@ -23,17 +19,11 @@ void prepare(cl::Context &context, cl::CommandQueue &queue, cl::Program &program
     // Create the context for the devices
     context = cl::Context(platform_devices[fpga_id]);
 
-    // Add the platform devices to the context
-
-    //std::cout << "Using device: " << platform_devices[fpga_id].getInfo<CL_DEVICE_NAME>() << "\n";
-
     // Create queue and program for each device
     queue = cl::CommandQueue(context, platform_devices[fpga_id], 0, &err);
     CHECK_ERR(err, "Failed to create command queue");
 
-
-    utils::load_binaries("/home/users/u101373/CG-FPGA/opencl/bin/global_memory_kernels.aocx", program, context, platform_devices[fpga_id]);
-
+    utils::load_binaries("/home/users/u101373/CG-FPGA/opencl/bin/global_memory_kernels/global_memory_kernels.aocx", program, context, platform_devices[fpga_id]);
 
 }
 
@@ -100,11 +90,6 @@ void conjugate_gradient(cl::Context &context, cl::CommandQueue &q, cl::Program &
         }
     }
 
-
-
-
-    //std::cout << "Rank: " << rank << "\tStarting offset: " << starting_offset << "\tProcess rows: " << process_rows << std::endl;
-
     double *r = new (std::align_val_t{ 64 }) double[n];
     double *d = new (std::align_val_t{ 64 }) double[n];
 
@@ -117,22 +102,14 @@ void conjugate_gradient(cl::Context &context, cl::CommandQueue &q, cl::Program &
 
     cl_int err;
 
-    DirectDeviceHandler device(context, q, program);
+    DirectKernelsHandler device(context, q, program);
 
     cl::Buffer d_A(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, process_rows*m*sizeof(double), (void*)(A+starting_offset), &err);
     CHECK_ERR(err, "d_A Buffer allocation error in CG.");
-    //cl::Buffer d_b(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,  size*sizeof(double), (void*)b, &err);
-    //cl::Buffer d_x(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,  size*sizeof(double), (void*)x, &err);
     cl::Buffer d_d(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, n*sizeof(double), (void*)d, &err);
     CHECK_ERR(err, "d_d Buffer allocation error in CG.");
-   // cl::Buffer d_r(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size*sizeof(double), (void*)r, &err);
-
     cl::Buffer d_Ad(context, CL_MEM_READ_WRITE, m*sizeof(double));
     CHECK_ERR(err, "d_Ad Buffer allocation error in CG.");
-    //cl::Buffer d_dot1(context, CL_MEM_WRITE_ONLY, 1*sizeof(double));
-    // /cl::Buffer d_dot2(context, CL_MEM_WRITE_ONLY, 1*sizeof(double)); 
-
-
 
     double alpha, beta;
     double rr, bb;
@@ -142,14 +119,10 @@ void conjugate_gradient(cl::Context &context, cl::CommandQueue &q, cl::Program &
     Sequential seq;
     bb = seq.dot(b, b, n); 
 
-
-    //device.dot(d_b, d_b, d_dot1, size);
-    //q.enqueueReadBuffer(d_dot1, CL_TRUE, 0, sizeof(double), &rr);
     rr = seq.dot(r, r, n); 
     bb = rr;
 
     int num_iters;
-    
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -160,9 +133,6 @@ void conjugate_gradient(cl::Context &context, cl::CommandQueue &q, cl::Program &
 
     for(num_iters = 1; num_iters <= max_iters; num_iters++)
     {
-        //if(rank==0) 
-        //    std::cout << "Iteration: " << num_iters << std::endl;
-            
         device.matrix_vector_mul(d_A, d_d, d_Ad, process_rows, m);
         q.enqueueReadBuffer(d_Ad, CL_TRUE, 0, process_rows*sizeof(double), process_Ad);
 
@@ -187,32 +157,6 @@ void conjugate_gradient(cl::Context &context, cl::CommandQueue &q, cl::Program &
             seq.axpby(1.0, r, -beta, d, n);
             rr = seq.dot(r, r, n);
 
-        /*
-        device.dot(d_d, d_r, d_dot1, size);
-        device.dot(d_Ad, d_d, d_dot2, size);
-        q.enqueueReadBuffer(d_dot1, CL_TRUE, 0, sizeof(double), &dot1);
-        q.enqueueReadBuffer(d_dot2, CL_TRUE, 0, sizeof(double), &dot2);
-        alpha = dot1 / dot2;
-
-        device.vec_sum(alpha, d_d, 1.0, d_x, size);
-        device.vec_sum(-alpha, d_Ad, 1.0, d_r, size);
-
-        device.dot(d_Ad, d_r, d_dot1, size);
-        device.dot(d_Ad, d_d, d_dot2, size);
-
-        q.enqueueReadBuffer(d_dot1, CL_TRUE, 0, sizeof(double), &dot1);
-        q.enqueueReadBuffer(d_dot2, CL_TRUE, 0, sizeof(double), &dot2);
-
-        beta = dot1 / dot2;
-
-        device.vec_sum(1.0, d_r, -beta, d_d, size);
-
-        device.dot(d_r, d_r, d_dot1, size);
-        q.enqueueReadBuffer(d_dot1, CL_TRUE, 0, sizeof(double), &dot1);
-        rr = dot1;
-        */  
-
-
         }
 
         MPI_Bcast(&rr, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -223,7 +167,6 @@ void conjugate_gradient(cl::Context &context, cl::CommandQueue &q, cl::Program &
         q.enqueueWriteBuffer(d_d, CL_TRUE, 0, n*sizeof(double), d);
     }
 
-   // q.enqueueReadBuffer(d_x, CL_TRUE, 0, size*sizeof(double), x);
     MPI_Barrier(MPI_COMM_WORLD);
     delete[] d;
     delete[] Ad;

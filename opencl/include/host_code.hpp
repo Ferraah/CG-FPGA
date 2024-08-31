@@ -7,11 +7,13 @@
 #include <cxxabi.h>
 #include <cstdlib>
 #include <chrono>
+#include <mpi.h>
 
-//#include "exception_handler.hpp"
-#include "device_code.hpp"
+#include "kernels_handler.hpp"
 #include "CL/cl.hpp"
 #include "utils.hpp"
+#include "host_code.hpp"
+#include "sequential.hpp"
 
 void prepare(cl::Context &context, cl::CommandQueue &q, cl::Program &program );
 void prepare(cl::Context &context, cl::CommandQueue &q, cl::Program &program, int fpga_id);

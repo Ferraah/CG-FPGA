@@ -7,7 +7,7 @@
 #include "utils.hpp"
 #include "Timer.hpp"
 #include "sequential.hpp"
-#include "device_code.hpp"
+#include "kernels_handler.hpp"
 
 cl::Context context;
 cl::CommandQueue q;

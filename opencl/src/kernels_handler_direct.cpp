@@ -1,7 +1,7 @@
-#include "device_code.hpp"
+#include "kernels_handler.hpp"
  
 
-void DirectDeviceHandler::dot(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t size) {
+void DirectKernelsHandler::dot(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t size) {
 
     cl_int err; 
     cl::Kernel kernel(program, "ddot", &err);
@@ -13,8 +13,6 @@ void DirectDeviceHandler::dot(const cl::Buffer &bufA, const cl::Buffer &bufB, co
     kernel.setArg(2, bufC);
     kernel.setArg(3, sizeof(unsigned int), &size);
 
-    // Single tasks
-   
     err = queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(1), cl::NullRange); 
     CHECK_ERR(err, "Error in dot enqueue.");
 
@@ -22,7 +20,8 @@ void DirectDeviceHandler::dot(const cl::Buffer &bufA, const cl::Buffer &bufB, co
     
 
 }
-void DirectDeviceHandler::vec_sum(double alpha, const cl::Buffer &bufA, double beta, const cl::Buffer &bufB, size_t size){
+
+void DirectKernelsHandler::vec_sum(double alpha, const cl::Buffer &bufA, double beta, const cl::Buffer &bufB, size_t size){
 
     cl_int err; 
     cl::Kernel kernel (program, "daxpy", &err);
@@ -45,7 +44,7 @@ void DirectDeviceHandler::vec_sum(double alpha, const cl::Buffer &bufA, double b
    
 }
 
-void DirectDeviceHandler::matrix_vector_mul(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t rows, size_t cols){
+void DirectKernelsHandler::matrix_vector_mul(const cl::Buffer &bufA, const cl::Buffer &bufB, const cl::Buffer &bufC, size_t rows, size_t cols){
 
     cl_int err;
     cl::Kernel kernel(cl::Kernel(program, "dgemv", &err));
@@ -69,8 +68,6 @@ void DirectDeviceHandler::matrix_vector_mul(const cl::Buffer &bufA, const cl::Bu
     kernel.setArg(7, sizeof(double),&beta);
 
 
-    // Single tasks
-    
     err = queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(1), cl::NullRange); 
     CHECK_ERR(err, "Error in gemv enqueue.");
 

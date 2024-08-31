@@ -5,9 +5,9 @@
 #include "utils.hpp"
 // oneAPI headers
 
-class PipesDeviceHandler {
+class PipesKernelsHandler {
     public:
-        PipesDeviceHandler(cl::Context &_context, cl::CommandQueue &_queue, cl::Program &_program) : 
+        PipesKernelsHandler(cl::Context &_context, cl::CommandQueue &_queue, cl::Program &_program) : 
             context(_context),
             queue(_queue),
             program(_program)
@@ -25,9 +25,9 @@ class PipesDeviceHandler {
 
 };
 
-class DirectDeviceHandler {
+class DirectKernelsHandler {
     public:
-        DirectDeviceHandler(cl::Context &_context, cl::CommandQueue &_queue, cl::Program &_program) : 
+        DirectKernelsHandler(cl::Context &_context, cl::CommandQueue &_queue, cl::Program &_program) : 
             context(_context),
             queue(_queue),
             program(_program)
