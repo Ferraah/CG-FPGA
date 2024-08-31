@@ -1,5 +1,0 @@
-if(EXISTS "/home/users/u101373/CG-FPGA/build/test/cg_test[1]_tests.cmake")
-  include("/home/users/u101373/CG-FPGA/build/test/cg_test[1]_tests.cmake")
-else()
-  add_test(cg_test_NOT_BUILT cg_test_NOT_BUILT)
-endif()

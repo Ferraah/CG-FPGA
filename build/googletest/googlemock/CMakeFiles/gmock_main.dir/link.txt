@@ -1,2 +1,0 @@
-/apps/USE/easybuild/staging/2023.1/software/binutils/2.40-GCCcore-12.3.0/bin/ar qc ../../lib/libgmock_main.a CMakeFiles/gmock_main.dir/src/gmock_main.cc.o
-/apps/USE/easybuild/staging/2023.1/software/binutils/2.40-GCCcore-12.3.0/bin/ranlib ../../lib/libgmock_main.a

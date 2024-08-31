@@ -1,1 +1,6 @@
-build_*/
+full/build_*/
+fpga_template/build*/
+full/fpga_executables
+opencl/bin/
+opencl/io
+opencl/build
