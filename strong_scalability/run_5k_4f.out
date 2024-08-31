@@ -1,0 +1,37 @@
+N: 5000
+1.60496
+1.50409
+1.52117
+1.51049
+1.52246
+1.52799
+1.53109
+1.51253
+1.50924
+1.50717
+1.51779
+1.52675
+1.52119
+1.52322
+1.53087
+1.50587
+1.5126
+1.51552
+1.524
+1.52437
+1.5088
+1.51748
+1.52904
+1.52445
+1.51843
+1.50535
+1.51429
+1.5069
+1.51331
+1.51468
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+error: *** step 1074587:0 CANCELLED DUE TO TIME LIMIT ***
+srun: error: mel3006: tasks 2-3: Terminated
+error: *** job 1074587 CANCELLED DUE TO TIME LIMIT ***
+10.4827 s10.4874 s10.4885 ssrun: error: mel3005: task 0: Terminated
+srun: error: mel3005: task 1: Terminated

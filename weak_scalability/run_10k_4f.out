@@ -1,0 +1,37 @@
+N: 10000
+5.65879
+5.6095
+6.52863
+5.61776
+5.53784
+5.56168
+5.54538
+5.57585
+5.53459
+5.56364
+5.53317
+5.58058
+5.61236
+5.57678
+5.54017
+5.59741
+5.54547
+5.56248
+5.54144
+5.56753
+5.56297
+5.59329
+5.54442
+5.57707
+5.53578
+5.57671
+5.52807
+5.5755
+5.53945
+5.55583
+double free or corruption (!prev)
+double free or corruption (!prev)
+21.791 ssrun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+21.791 s21.8161 ssrun: error: mel3009: task 1: Terminated
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+srun: error: mel3005: tasks 0-1: Terminated
