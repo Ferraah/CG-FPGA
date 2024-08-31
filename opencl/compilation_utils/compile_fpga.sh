@@ -10,8 +10,6 @@
 #SBATCH --time 48:00:00
 #SBATCH --output FBLAS_fpga_%x_%j.out
 #SBATCH --error FBLAS_fpga_%x_%j.out
-#SBATCH --mail-user=daniele6.ferrario@mail.polimi.it
-#SBATCH --mail-type=ALL
 
 #Load software environment
 module purge
